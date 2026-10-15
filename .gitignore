@@ -1,0 +1,7 @@
+node_modules/
+remotion/out/
+remotion/data/
+remotion/public/job/
+deploy/.env
+*.mp4
+.DS_Store

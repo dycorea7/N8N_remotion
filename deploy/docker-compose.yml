@@ -1,0 +1,26 @@
+services:
+  renderer:
+    build: ../remotion
+    restart: unless-stopped
+    environment:
+      API_KEY: ${API_KEY}
+      PUBLIC_BASE: https://${DOMAIN}
+      KEEP_HOURS: ${KEEP_HOURS:-48}
+    volumes:
+      - render-data:/data
+    shm_size: 1gb   # 크롬이 /dev/shm 부족으로 죽지 않게
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on: [renderer]
+
+volumes:
+  render-data:
+  caddy-data:

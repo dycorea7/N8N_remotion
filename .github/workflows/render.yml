@@ -1,0 +1,92 @@
+name: Render Short
+
+# n8n이 GitHub API로 실행한다 (workflow_dispatch).
+# job_url   : n8n이 드라이브에 올린 job.json 다운로드 링크
+# resume_url: 렌더가 끝나면 결과를 알려 줄 n8n Wait 노드 주소
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: job id
+        required: true
+      job_url:
+        description: job.json download URL
+        required: true
+      resume_url:
+        description: n8n resume webhook URL
+        required: true
+
+permissions:
+  contents: write   # 완성 영상을 릴리스 'renders'에 올리기 위해
+
+concurrency:
+  group: render-short
+  cancel-in-progress: false   # 동시에 여러 건이 오면 순서대로
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      JOB_ID: ${{ inputs.job_id }}
+      JOB_URL: ${{ inputs.job_url }}
+      RESUME_URL: ${{ inputs.resume_url }}
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: renders
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: remotion/package-lock.json
+
+      - name: Install emoji font
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-color-emoji
+
+      - name: Install dependencies
+        working-directory: remotion
+        run: npm ci --no-audit --no-fund && npx remotion browser ensure
+
+      - name: Render
+        working-directory: remotion
+        run: |
+          SAFE_ID=$(echo "$JOB_ID" | tr -cd 'a-zA-Z0-9_-' | cut -c1-40)
+          echo "SAFE_ID=$SAFE_ID" >> "$GITHUB_ENV"
+          mkdir -p out
+          node render-job.mjs "$JOB_URL" "out/$SAFE_ID.mp4"
+
+      - name: Upload video to release
+        working-directory: remotion
+        run: |
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --title "Rendered shorts" --notes "n8n Motion Shorts 렌더 결과 (7일 뒤 자동 삭제)"
+          gh release upload "$RELEASE_TAG" "out/$SAFE_ID.mp4" --clobber
+          ASSET_ID=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$RELEASE_TAG" --jq ".assets[] | select(.name==\"$SAFE_ID.mp4\") | .id")
+          echo "ASSET_ID=$ASSET_ID" >> "$GITHUB_ENV"
+
+      - name: Notify n8n (done)
+        working-directory: remotion
+        run: |
+          jq --arg asset_id "$ASSET_ID" --arg repo "$GITHUB_REPOSITORY" \
+             --arg run_url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+             '. + {asset_id: $asset_id, repo: $repo, run_url: $run_url}' "out/$SAFE_ID.mp4.result.json" > payload.json
+          cat payload.json
+          curl -sS --fail-with-body --retry 3 -X POST -H 'content-type: application/json' --data @payload.json "$RESUME_URL"
+
+      - name: Notify n8n (failed)
+        if: failure()
+        run: |
+          jq -n --arg job_id "$JOB_ID" \
+             --arg run_url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+             '{status: "error", job_id: $job_id, error: "GitHub Actions 렌더 실패 — 로그 확인", run_url: $run_url}' > fail.json
+          curl -sS --retry 3 -X POST -H 'content-type: application/json' --data @fail.json "$RESUME_URL" || true
+
+      - name: Delete videos older than 7 days
+        if: always()
+        continue-on-error: true
+        run: |
+          CUTOFF=$(date -u -d '7 days ago' +%s)
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$RELEASE_TAG" --jq '.assets[] | "\(.id) \(.created_at)"' 2>/dev/null | while read -r ID CREATED; do
+            if [ "$(date -u -d "$CREATED" +%s)" -lt "$CUTOFF" ]; then gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$ID" && echo "deleted $ID"; fi
+          done
