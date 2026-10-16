@@ -7,6 +7,9 @@ import { Theme, SANS_FONT } from './theme';
 type P = { scene: Scene; theme: Theme; index: number; durationInFrames: number; lang: string };
 
 // ── 공통 도우미 ──
+/** 가로 화면(롱폼)이면 true */
+const useLandscape = () => { const { width, height } = useVideoConfig(); return width > height; };
+
 const useSpring = (delay = 0, cfg: any = { damping: 15, stiffness: 160, mass: 0.7 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -253,7 +256,8 @@ const ImageScene: React.FC<P> = ({ scene, theme, lang, index, durationInFrames }
   const [dx, dy] = dirs[index % dirs.length];
   const tx = dx * 40 * (p - 0.5), ty = dy * 50 * (p - 0.5);
   const len = (v.text || '').length;
-  const size = lang === 'ko' ? (len > 14 ? 78 : 92) : (len > 24 ? 70 : 84);
+  const landscape = useLandscape();
+  const size = landscape ? (lang === 'ko' ? (len > 14 ? 70 : 84) : (len > 24 ? 62 : 76)) : lang === 'ko' ? (len > 14 ? 78 : 92) : (len > 24 ? 70 : 84);
   return (
     <AbsoluteFill>
       <AbsoluteFill style={{ transform: `scale(${scale}) translate(${tx}px, ${ty}px)` }}>
@@ -262,7 +266,9 @@ const ImageScene: React.FC<P> = ({ scene, theme, lang, index, durationInFrames }
       {/* 위: 키워드 가독성, 아래: 자막 가독성 */}
       <AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0.05) 52%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.72) 100%)' }} />
       {v.text && (
-        <AbsoluteFill style={{ top: 250, height: 420, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 70px' }}>
+        <AbsoluteFill style={landscape
+          ? { top: 70, height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 220px' }
+          : { top: 250, height: 420, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 70px' }}>
           <KineticText text={v.text} highlight={v.highlight} theme={theme} size={size} lang={lang} delay={6} />
         </AbsoluteFill>
       )}
@@ -270,14 +276,42 @@ const ImageScene: React.FC<P> = ({ scene, theme, lang, index, durationInFrames }
   );
 };
 
-const Center: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  // 그래픽은 위 220px(상단 UI)와 자막 영역(1260~) 사이에 배치
-  <AbsoluteFill style={{ top: 230, height: 1010, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 70px' }}>{children}</AbsoluteFill>
-);
+const Center: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const landscape = useLandscape();
+  if (landscape) {
+    // 롱폼 16:9: 세로용으로 만든 장면을 1780×911 가상 화면에 그리고 0.9배로 줄여 자막 위(30~850px)에 둔다
+    return (
+      <AbsoluteFill style={{ top: 30, height: 820, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ flex: 'none', width: 1780, height: 911, transform: 'scale(0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 70px', position: 'relative' }}>{children}</div>
+      </AbsoluteFill>
+    );
+  }
+  // 쇼츠: 그래픽은 위 220px(상단 UI)와 자막 영역(1260~) 사이에 배치
+  return <AbsoluteFill style={{ top: 230, height: 1010, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 70px' }}>{children}</AbsoluteFill>;
+};
+
+/** 롱폼 챕터 표지: 큰 번호 + 제목 */
+const ChapterCard: React.FC<P> = ({ scene, theme, lang }) => {
+  const v = scene.visual;
+  const frame = useCurrentFrame();
+  const n = useSpring(0, { damping: 12, stiffness: 120 });
+  const line = interpolate(frame, [6, 26], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  const len = (v.title || v.text || '').length;
+  const size = lang === 'ko' ? (len > 18 ? 104 : 128) : (len > 30 ? 92 : 112);
+  return (
+    <Center>
+      <div style={{ fontFamily: SANS_FONT, fontWeight: 900, fontSize: 64, letterSpacing: 8, color: theme.accent, opacity: n, transform: `translateY(${(1 - n) * 30}px)` }}>
+        {lang === 'ko' ? `PART ${v.number || ''}` : `CHAPTER ${v.number || ''}`}
+      </div>
+      <div style={{ width: 640 * line, height: 6, borderRadius: 3, background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`, margin: '34px 0 44px' }} />
+      <KineticText text={v.title || v.text || ''} highlight={v.highlight} theme={theme} size={size} font={theme.headlineFont} lang={lang} delay={10} />
+    </Center>
+  );
+};
 
 const TEMPLATES: Record<Visual['type'], React.FC<P>> = {
   headline: Headline, icon: Headline, stat: Stat, chart: Chart, list: List,
-  quote: QuoteCard, scripture: (p) => <QuoteCard {...p} scripture />, compare: Compare, outro: Outro, image: ImageScene,
+  quote: QuoteCard, scripture: (p) => <QuoteCard {...p} scripture />, compare: Compare, outro: Outro, image: ImageScene, chapter: ChapterCard,
 };
 
 /** 장면 진입/퇴장 전환을 장면마다 바꾼다 */

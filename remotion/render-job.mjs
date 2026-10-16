@@ -1,12 +1,14 @@
 // GitHub Actions(또는 로컬)에서 작업 1건을 렌더한다.
 //   node render-job.mjs <job.json 경로 또는 URL> <출력 mp4 경로>
 // job.json = n8n이 만든 { job_id, lang, category, title, scenes, alignment, audio_base64 | audio_url, music_url, music_volume }
+//   롱폼은 추가로 { format: 'long', fps: 24, chapters: [{title}], thumbnail: {text, highlight, src, badge} } (장면마다 chapter 번호)
+//   썸네일이 있으면 <출력>.jpg 도 만든다.
 // 결과 요약은 <출력>.result.json 으로 남긴다.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bundle } from '@remotion/bundler';
-import { renderMedia, selectComposition } from '@remotion/renderer';
+import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
 import { prepare } from './lib/prepare.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -62,6 +64,17 @@ await Promise.all((job.scenes || []).map(async (s, i) => {
   }
 }));
 
+// ── 롱폼 썸네일 이미지 ──
+const isLong = job.format === 'long';
+let thumbSrc = '';
+if (isLong && job.thumbnail && /^https?:\/\//.test(String(job.thumbnail.src || ''))) {
+  try {
+    const name = `thumb${extOf(job.thumbnail.src, '.jpg')}`;
+    fs.writeFileSync(path.join(dir, name), await fetchBuf(job.thumbnail.src, 20e6));
+    thumbSrc = `${rel}/${name}`;
+  } catch (e) { warnings.push('썸네일 이미지 실패 → 첫 이미지 장면 사용: ' + e.message); }
+}
+
 const props = prepare(job);
 props.audioSrc = `${rel}/voice.mp3`;
 if (!props.alignmentExact) warnings.push('정렬 문자와 대본이 달라 장면 시점을 비율로 근사했습니다');
@@ -78,13 +91,26 @@ if (job.music_url) {
 // public 파일을 다 놓은 뒤에 번들해야 staticFile로 읽힌다
 console.log(`assets ready (${((Date.now() - t0) / 1000).toFixed(0)}s) — images ${imgOk} ok / ${imgFail} failed`);
 const serveUrl = await bundle({ entryPoint: path.join(__dirname, 'src/index.ts'), publicDir: path.join(__dirname, 'public') });
-const composition = await selectComposition({ serveUrl, id: 'Short', inputProps: props, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
+const composition = await selectComposition({ serveUrl, id: isLong ? 'Long' : 'Short', inputProps: props, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
+
+// 썸네일은 영상보다 먼저 만든다 (렌더가 길어서 실패하면 원인 파악이 늦어지지 않게)
+let thumbPath = null;
+if (isLong && job.thumbnail && job.thumbnail.text) {
+  try {
+    const firstImg = props.scenes.find(s => s.visual.type === 'image');
+    const tp = { category: props.category, lang: props.lang, text: String(job.thumbnail.text).slice(0, 40), highlight: job.thumbnail.highlight || [], badge: String(job.thumbnail.badge || '').slice(0, 14), src: thumbSrc || (firstImg && firstImg.visual.src) || undefined };
+    const still = await selectComposition({ serveUrl, id: 'Thumb', inputProps: tp, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
+    thumbPath = outArg.replace(/\.mp4$/, '') + '.jpg';
+    await renderStill({ serveUrl, composition: still, inputProps: tp, output: thumbPath, imageFormat: 'jpeg', jpegQuality: 90, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
+  } catch (e) { warnings.push('썸네일 생성 실패: ' + e.message); thumbPath = null; }
+}
+
 const tr = Date.now();
 let lastLog = 0;
 await renderMedia({
-  serveUrl, composition, inputProps: props, codec: 'h264', crf: 23, audioBitrate: '192k',
+  serveUrl, composition, inputProps: props, codec: 'h264', crf: isLong ? 26 : 23, audioBitrate: isLong ? '160k' : '192k',
   outputLocation: outArg, browserExecutable: BROWSER, timeoutInMilliseconds: 120000,
-  onProgress: ({ progress }) => { const p = Math.floor(progress * 10); if (p > lastLog) { lastLog = p; console.log(`render ${p * 10}%`); } },
+  onProgress: ({ progress }) => { const step = isLong ? 20 : 10; const p = Math.floor(progress * step); if (p > lastLog) { lastLog = p; console.log(`render ${Math.round(p * 100 / step)}% (${((Date.now() - tr) / 60000).toFixed(1)}분)`); } },
 });
 
 const result = {
@@ -94,7 +120,10 @@ const result = {
   render_sec: Math.round((Date.now() - tr) / 1000),
   total_sec: Math.round((Date.now() - t0) / 1000),
   size_mb: Number((fs.statSync(outArg).size / 1e6).toFixed(1)),
-  scenes: props.scenes.map(s => s.visual.type),
+  format: isLong ? 'long' : 'short',
+  scenes: isLong ? props.scenes.length : props.scenes.map(s => s.visual.type),
+  chapters: props.chapters || [],
+  thumbnail: thumbPath ? path.basename(thumbPath) : null,
   images: { ok: imgOk, failed: imgFail },
   warnings,
 };

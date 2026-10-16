@@ -15,18 +15,23 @@ on:
       resume_url:
         description: n8n resume webhook URL
         required: true
+      format:
+        description: short (9:16, 기본) 또는 long (16:9 롱폼)
+        required: false
+        default: short
 
 permissions:
   contents: write   # 완성 영상을 릴리스 'renders'에 올리기 위해
 
+# 쇼츠와 롱폼은 대기열을 나눈다 — 1시간짜리 롱폼 렌더가 쇼츠를 막지 않게
 concurrency:
-  group: render-short
-  cancel-in-progress: false   # 동시에 여러 건이 오면 순서대로
+  group: render-${{ inputs.format || 'short' }}
+  cancel-in-progress: false   # 같은 종류가 동시에 여러 건 오면 순서대로
 
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: ${{ inputs.format == 'long' && 170 || 40 }}
     env:
       JOB_ID: ${{ inputs.job_id }}
       JOB_URL: ${{ inputs.job_url }}
@@ -64,13 +69,19 @@ jobs:
           gh release upload "$RELEASE_TAG" "out/$SAFE_ID.mp4" --clobber
           ASSET_ID=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$RELEASE_TAG" --jq ".assets[] | select(.name==\"$SAFE_ID.mp4\") | .id")
           echo "ASSET_ID=$ASSET_ID" >> "$GITHUB_ENV"
+          THUMB_ASSET_ID=""
+          if [ -f "out/$SAFE_ID.jpg" ]; then
+            gh release upload "$RELEASE_TAG" "out/$SAFE_ID.jpg" --clobber
+            THUMB_ASSET_ID=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$RELEASE_TAG" --jq ".assets[] | select(.name==\"$SAFE_ID.jpg\") | .id")
+          fi
+          echo "THUMB_ASSET_ID=$THUMB_ASSET_ID" >> "$GITHUB_ENV"
 
       - name: Notify n8n (done)
         working-directory: remotion
         run: |
-          jq --arg asset_id "$ASSET_ID" --arg repo "$GITHUB_REPOSITORY" \
+          jq --arg asset_id "$ASSET_ID" --arg thumb_asset_id "$THUMB_ASSET_ID" --arg repo "$GITHUB_REPOSITORY" \
              --arg run_url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
-             '. + {asset_id: $asset_id, repo: $repo, run_url: $run_url}' "out/$SAFE_ID.mp4.result.json" > payload.json
+             '. + {asset_id: $asset_id, thumb_asset_id: $thumb_asset_id, repo: $repo, run_url: $run_url}' "out/$SAFE_ID.mp4.result.json" > payload.json
           cat payload.json
           curl -sS --fail-with-body --retry 3 -X POST -H 'content-type: application/json' --data @payload.json "$RESUME_URL"
 

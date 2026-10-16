@@ -4,7 +4,7 @@
 export const FPS = 30;
 const TAIL_SEC = 0.9;
 
-const VISUAL_TYPES = ['headline', 'stat', 'chart', 'list', 'quote', 'compare', 'scripture', 'icon', 'outro', 'image'];
+const VISUAL_TYPES = ['headline', 'stat', 'chart', 'list', 'quote', 'compare', 'scripture', 'icon', 'outro', 'image', 'chapter'];
 
 /** 문자 배열 → 단어 [{text, start, end, charStart, charEnd}] */
 export function wordsFromAlignment(chars, starts, ends) {
@@ -65,6 +65,10 @@ export function sanitizeVisual(v, narration) {
     if (!/^(https?:\/\/|job\/)/.test(src)) return { type: 'headline', text: text || fallback.text, highlight, emoji: out.emoji };
     return { type: 'image', src, text, highlight };
   }
+  if (t === 'chapter') {
+    const title = clean(v.title || v.text, 40) || fallback.text;
+    return { type: 'chapter', title, number: Math.max(1, Math.round(num(v.number) || 1)), highlight: (Array.isArray(v.highlight) ? v.highlight : []).map(h => clean(h, 20)).filter(Boolean).slice(0, 2) };
+  }
   if (t === 'headline' || t === 'icon' || t === 'outro') {
     out.text = clean(v.text, 48) || fallback.text;
     out.highlight = (Array.isArray(v.highlight) ? v.highlight : []).map(h => clean(h, 20)).filter(Boolean).slice(0, 3);
@@ -107,6 +111,7 @@ export function sanitizeVisual(v, narration) {
  */
 export function prepare(req) {
   const lang = req.lang === 'en' ? 'en' : 'ko';
+  const fps = [24, 25, 30].includes(Number(req.fps)) ? Number(req.fps) : FPS;
   const scenesIn = (Array.isArray(req.scenes) ? req.scenes : []).filter(s => s && String(s.narration || '').trim());
   if (!scenesIn.length) throw new Error('scenes가 비어 있습니다');
   const al = req.alignment || {};
@@ -146,12 +151,22 @@ export function prepare(req) {
     const end = i + 1 < times.length ? times[i + 1] : duration;
     const lo = sceneCharStarts[i], hi = i + 1 < sceneCharStarts.length ? sceneCharStarts[i + 1] : chars.length;
     const sceneWords = words.filter(w => w.charStart >= lo && w.charStart < hi).map(w => ({ text: w.text, start: w.start, end: w.end }));
-    return { start, end, narration: narrations[i], words: sceneWords, visual: sanitizeVisual(s.visual, narrations[i]) };
+    const chapter = Number.isInteger(s.chapter) ? s.chapter : undefined;
+    return { start, end, narration: narrations[i], words: sceneWords, visual: sanitizeVisual(s.visual, narrations[i]), chapter };
   }).filter(s => s.end - s.start > 0.3);
 
+  // 롱폼 챕터: 각 챕터의 첫 장면 시작 시각 (유튜브 설명란 타임스탬프에도 쓴다)
+  const chapterTitles = Array.isArray(req.chapters) ? req.chapters.map(c => clean(c && c.title, 60)) : [];
+  const chapters = [];
+  chapterTitles.forEach((title, ci) => {
+    const first = scenes.find(s => s.chapter === ci);
+    if (first && title) chapters.push({ title, start: chapters.length === 0 ? 0 : Math.round(first.start * 10) / 10 });
+  });
+
   return {
-    fps: FPS,
-    durationInFrames: Math.ceil(duration * FPS),
+    fps,
+    durationInFrames: Math.ceil(duration * fps),
+    chapters,
     lang,
     category: String(req.category || 'other'),
     scenes,

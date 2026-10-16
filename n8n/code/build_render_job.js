@@ -1,6 +1,6 @@
 // ===== 설정 =====
-// 렌더용 GitHub 저장소 "아이디/저장소이름". 예: 'dycorea7/motion-shorts'
-const GITHUB_REPO = '';
+// 렌더용 GitHub 저장소 "아이디/저장소이름"
+const GITHUB_REPO = 'dycorea7/N8N_remotion';
 const GITHUB_BRANCH = 'main';
 const MUSIC_VOLUME = 0.16;
 // ================
