@@ -2,7 +2,8 @@
 const p = $('Parse Script JSON').first().json;
 
 // 화풍은 카테고리로 정한다 (v2와 같은 톤). 프롬프트에는 장면 내용만 있고, 여기서 화풍을 붙인다.
-const SAFETY = 'adults only, wholesome, non-sexual, fully clothed, modest clothing, no text, no lettering, no numbers, no logos, no watermark, no signature';
+// 애니풍은 인물이 어려 보이기 쉬워서 성인임을 분명히 적는다. 교복류는 금지.
+const SAFETY = 'adults only, every person is clearly a grown adult in their 30s or older with mature adult features, adult office or casual clothing, no school uniform, no sailor collar, no bow tie uniform, wholesome, non-sexual, fully clothed, modest clothing, no text, no lettering, no numbers, no logos, no watermark, no signature';
 const FRAME = 'tall vertical portrait composition, main subject in the middle third, calm empty space at top and bottom';
 const SHINKAI = {
   prefix: 'An anime style illustration inspired by Makoto Shinkai',
@@ -30,6 +31,10 @@ function sanitizePrompt(text) {
     [/\b(teenagers?|teens?|adolescents?|schoolchildren|schoolgirls?|schoolboys?|minors?)\b/gi, 'young adults'],
     [/\b(girls|boys|children|kids|toddlers?|babies|baby)\b/gi, 'young adults'],
     [/\b(girl|boy|child|kid)\b/gi, 'young adult'],
+    [/\b(school uniforms?|sailor (uniform|collar)|schoolbag|school bag|classroom|high school)\b/gi, 'adult casual clothes'],
+    [/\byoung adults?\b/gi, 'adult in their thirties'],
+    [/\b(young|youthful|cute)\s+(woman|man|person|lady|guy)\b/gi, 'adult $2 in their thirties'],
+    [/\ba adult\b/gi, 'an adult'],
     [/\b(blood|bloody|bleeding|wound|wounds|gore|gory|corpse|cadaver)\b/gi, ''],
     [/,?\s*(9:16( aspect ratio)?|--ar\s*\d+:\d+|anime style|Makoto Shinkai style|photorealistic|oil painting|8k|masterpiece|no text|no logos)\b/gi, ''],
     [/\s{2,}/g, ' '], [/\s+,/g, ','], [/,\s*,+/g, ','], [/^[\s,.]+|[\s,.]+$/g, '']
