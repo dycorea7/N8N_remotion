@@ -5,20 +5,20 @@ import { resolveSrc } from './assets';
 import { Scene, Visual } from './types';
 import { Theme, SANS_FONT } from './theme';
 
-type P = { scene: Scene; theme: Theme; index: number; durationInFrames: number; lang: string; category?: string; overlap?: number };
+export type P = { scene: Scene; theme: Theme; index: number; durationInFrames: number; lang: string; category?: string; overlap?: number };
 
 // ── 공통 도우미 ──
 /** 가로 화면(롱폼)이면 true */
-const useLandscape = () => { const { width, height } = useVideoConfig(); return width > height; };
+export const useLandscape = () => { const { width, height } = useVideoConfig(); return width > height; };
 
-const useSpring = (delay = 0, cfg: any = { damping: 15, stiffness: 160, mass: 0.7 }) => {
+export const useSpring = (delay = 0, cfg: any = { damping: 15, stiffness: 160, mass: 0.7 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return spring({ frame: frame - delay, fps, config: cfg });
 };
 
 /** 장면 나레이션에서 phrase의 첫 낱말이 발음되는 시각(장면 기준 프레임). 못 찾으면 null */
-function spokenFrame(scene: Scene, phrase: string, fps: number): number | null {
+export function spokenFrame(scene: Scene, phrase: string, fps: number): number | null {
   const key = String(phrase || '').replace(/[^\p{L}\p{N}]/gu, ' ').trim().split(/\s+/)[0];
   if (!key || key.length < 1) return null;
   const k = key.length > 2 ? key.slice(0, Math.max(2, key.length - 1)) : key; // 조사 붙은 경우 대비
@@ -27,7 +27,7 @@ function spokenFrame(scene: Scene, phrase: string, fps: number): number | null {
 }
 
 /** 항목 등장 프레임: 말할 때 등장, 못 찾으면 장면 앞 60%에 고르게 */
-function revealFrames(scene: Scene, labels: string[], fps: number, dur: number): number[] {
+export function revealFrames(scene: Scene, labels: string[], fps: number, dur: number): number[] {
   const even = labels.map((_, i) => Math.round(8 + i * (dur * 0.6) / Math.max(1, labels.length)));
   const spoken = labels.map(l => spokenFrame(scene, l, fps));
   let last = -1;
@@ -89,7 +89,7 @@ const IconBadge: React.FC<{ e?: string; theme: Theme; category?: string; size?: 
   );
 };
 
-const Kicker: React.FC<{ text?: string; theme: Theme; delay?: number }> = ({ text, theme, delay = 0 }) => {
+export const Kicker: React.FC<{ text?: string; theme: Theme; delay?: number }> = ({ text, theme, delay = 0 }) => {
   const s = useSpring(delay);
   if (!text) return null;
   return (
@@ -101,7 +101,7 @@ const Kicker: React.FC<{ text?: string; theme: Theme; delay?: number }> = ({ tex
 };
 
 /** 단어별로 튀어 오르는 큰 문장. highlight 단어는 강조색 + 밑줄 스윕 */
-const KineticText: React.FC<{ text: string; highlight?: string[]; theme: Theme; size: number; font?: string; delay?: number; stagger?: number; lang: string }> = ({ text, highlight = [], theme, size, font, delay = 0, stagger = 3, lang }) => {
+export const KineticText: React.FC<{ text: string; highlight?: string[]; theme: Theme; size: number; font?: string; delay?: number; stagger?: number; lang: string }> = ({ text, highlight = [], theme, size, font, delay = 0, stagger = 3, lang }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const words = text.split(/\s+/).filter(Boolean);
@@ -123,7 +123,7 @@ const KineticText: React.FC<{ text: string; highlight?: string[]; theme: Theme; 
   );
 };
 
-const fmt = (v: number, d: number, lang: string) => v.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+export const fmt = (v: number, d: number, lang: string) => v.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 
 // ── 장면 템플릿 ──
 const Headline: React.FC<P> = ({ scene, theme, lang, category }) => {
@@ -331,7 +331,7 @@ const ImageScene: React.FC<P> = ({ scene, theme, lang, index, durationInFrames }
   );
 };
 
-const Center: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const Center: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const landscape = useLandscape();
   if (landscape) {
     // 롱폼 16:9: 세로용으로 만든 장면을 1780×911 가상 화면에 그리고 0.9배로 줄여 자막 위(30~850px)에 둔다
@@ -457,7 +457,7 @@ const IconGrid: React.FC<P> = ({ scene, theme, durationInFrames, category }) => 
   );
 };
 
-const TEMPLATES: Record<Visual['type'], React.FC<P>> = {
+export const TEMPLATES: Record<Visual['type'], React.FC<P>> = {
   headline: Headline, icon: Headline, stat: Stat, chart: Chart, list: List,
   quote: QuoteCard, scripture: (p) => <QuoteCard {...p} scripture />, compare: Compare, outro: Outro, image: ImageScene, chapter: ChapterCard,
   timeline: Timeline, checklist: Checklist, iconGrid: IconGrid,

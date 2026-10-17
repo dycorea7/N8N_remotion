@@ -188,5 +188,6 @@ export function prepare(req) {
     captions: chunkCaptions(words, lang, breakChars),
     alignmentExact: exact,
     title: clean(req.title, 90),
+    style: req.style === 'glyph' ? 'glyph' : 'classic',
   };
 }
