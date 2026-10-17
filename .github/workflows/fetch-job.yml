@@ -16,3 +16,4 @@ jobs:
           curl -sSL --fail -o "job_${{ inputs.file_id }}.json" "https://drive.google.com/uc?export=download&id=${{ inputs.file_id }}"
           head -c 100 "job_${{ inputs.file_id }}.json"
           gh release upload renders "job_${{ inputs.file_id }}.json" --clobber
+          i=0; for u in $(jq -r '.scenes[].visual.src // empty' "job_${{ inputs.file_id }}.json"); do i=$((i+1)); curl -sSL --fail -o "img_${{ inputs.file_id }}_$i.jpg" "$u" && gh release upload renders "img_${{ inputs.file_id }}_$i.jpg" --clobber; done
