@@ -3,6 +3,8 @@
 const GITHUB_REPO = 'dycorea7/N8N_remotion';
 const GITHUB_BRANCH = 'main';
 const MUSIC_VOLUME = 0.10;   // 롱폼은 오래 들으니 쇼츠보다 낮게
+// 영상 스타일: 'classic' = 기존 카드형 / 'glyph' = 글자로 그린 이미지·글자 바닥·네온 타이포 (참고 영상 스타일)
+const VIDEO_STYLE = 'classic';
 // ================
 
 if (!GITHUB_REPO) throw new Error('Build Render Job 노드의 GITHUB_REPO에 저장소 이름(아이디/저장소)을 입력하세요');
@@ -51,7 +53,7 @@ const job = {
   job_id: jobId, format: 'long', fps: 24, lang: p.subtitleLang, category: p.category, title: p.title,
   chapters: p.chapters, thumbnail: Object.assign({}, p.thumbnail, { src: thumbSrc }),
   scenes, alignment: tts.alignment, audio_base64: tts.audio_base64,
-  music_url: musicUrl, music_volume: MUSIC_VOLUME
+  music_url: musicUrl, music_volume: MUSIC_VOLUME, style: VIDEO_STYLE
 };
 const text = JSON.stringify(job);
 console.log('job ' + jobId + ' | ' + Math.round(text.length / 1024) + 'KB | images ' + imagesOk + ' ok / ' + imagesFailed + ' failed | music: ' + musicName);
