@@ -94,11 +94,15 @@ Visual types and fields (use ONLY these):
 - quote: {"type":"quote","text":"the quote, max 40 chars","author":"name"}  - only real, accurately attributed quotes.
 - scripture: {"type":"scripture","text":"verse wording, max 60 chars","author":"reference e.g. 이사야 41:10"}  - sermon only.
 - icon: {"type":"icon","emoji":"one emoji","text":"max 14 chars"}
+- timeline: {"type":"timeline","title":"max 16 chars","items":[{"label":"step or year, max 8 chars","text":"max 14 Korean chars / 5 English words"}]}  - 2 to 4 ordered stages or years; each appears as it is spoken.
+- checklist: {"type":"checklist","title":"max 16 chars","items":["2 to 4 concrete actions, max 12 Korean chars each"]}  - things the viewer should do; each gets ticked as it is spoken.
+- iconGrid: {"type":"iconGrid","title":"max 16 chars","items":[{"emoji":"one common emoji","label":"max 8 Korean chars"}]}  - 2 to 4 parallel ideas side by side.
+(Emoji are drawn as clean line icons, so pick a common, literal emoji: 💰 ⏰ 🧠 ❤️ 📖 🙏 🎯 💡 ✅ ⚠️ 🌙 🏃 🍎 🤝 📈.)
 - outro: {"type":"outro","text":"closing line, max 16 chars","highlight":["word"],"cta":"short subscribe call, e.g. 구독하고 같이 성장해요 or Follow for more"}${IMAGE_TYPE}
 
 Design rules:
 - Scene 1 is the hook: headline (or stat if the hook is a number). The last scene is always outro.
-- Never use the same type twice in a row. Essays use at least 4 different types.${IMAGE_RULE}
+- Never use the same type twice in a row. Essays use at least 4 different types; prefer timeline / checklist / iconGrid over a plain list when they fit.${IMAGE_RULE}
 - Numbers on screen must match exactly what the narration says. Never invent a number for a stat or chart; if the script has no real numbers, use headline, list, compare, icon instead.
 - SERMON: use scripture for the verse, otherwise headline, icon, quote-free cards; never stat or chart.
 - highlight words must literally appear in that scene's text.

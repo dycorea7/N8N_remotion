@@ -48,10 +48,14 @@ Visual types (use ONLY these):
 - quote: {"type":"quote","text":"max 40 chars","author":"name"} - real quotes only.
 - scripture: {"type":"scripture","text":"verse wording, max 60 chars","author":"reference e.g. 이사야 41:10"} - sermon only.
 - icon: {"type":"icon","emoji":"one emoji","text":"max 14 chars"}
+- timeline: {"type":"timeline","title":"max 16 chars","items":[{"label":"step or year, max 8 chars","text":"max 14 Korean chars / 5 English words"}]}  - 2 to 4 ordered stages or years; each appears as it is spoken.
+- checklist: {"type":"checklist","title":"max 16 chars","items":["2 to 4 concrete actions, max 12 Korean chars each"]}  - things the viewer should do; each gets ticked as it is spoken.
+- iconGrid: {"type":"iconGrid","title":"max 16 chars","items":[{"emoji":"one common emoji","label":"max 8 Korean chars"}]}  - 2 to 4 parallel ideas side by side.
+(Emoji are drawn as clean line icons, so pick a common, literal emoji: 💰 ⏰ 🧠 ❤️ 📖 🙏 🎯 💡 ✅ ⚠️ 🌙 🏃 🍎 🤝 📈.)
 - image: {"type":"image","prompt":"English image prompt, under 30 words","text":"optional overlay keyword, max 12 Korean chars","highlight":["word from text"]} - a full-screen 16:9 AI illustration. Use for up to ${MAX_IMAGES} scenes spread across all chapters (a concrete moment, place or object), never two in a row, never for numbers or lists. Prompt rules: describe only the CONTENT (style is added automatically); give time of day, weather and light; at most one person, written as an adult figure with no age, gender, nationality or ethnicity; never children; modest clothing; never a real identifiable person; no text or logos; no religious icons of specific figures.
 - outro: {"type":"outro","text":"closing line, max 16 chars","highlight":["word"],"cta":"short subscribe call"} - ONLY the very last scene.
 
-Design rules: never the same type twice in a row (except image never twice in a row either). Each body chapter uses at least 3 different types. Numbers on screen must exactly match the narration; never invent numbers. SERMON: no stat or chart. highlight words must literally appear in that scene's text. Never use the straight double-quote character inside any value; use “ ” or 「 」.
+Design rules: never the same type twice in a row (except image never twice in a row either). Each body chapter uses at least 3 different types; use timeline, checklist and iconGrid where they fit instead of repeating list or headline. Numbers on screen must exactly match the narration; never invent numbers. SERMON: no stat or chart. highlight words must literally appear in that scene's text. Never use the straight double-quote character inside any value; use “ ” or 「 」.
 
 === SEO & THUMBNAIL ===
 title: under 60 characters, the searchable keyword first, a curiosity gap, honest. Include the scripture reference for sermons. Must differ from the Short's title.
