@@ -1,6 +1,6 @@
 export type Word = { text: string; start: number; end: number };
 export type Visual = {
-  type: 'headline' | 'stat' | 'chart' | 'list' | 'quote' | 'compare' | 'scripture' | 'icon' | 'outro' | 'image' | 'chapter';
+  type: 'headline' | 'stat' | 'chart' | 'list' | 'quote' | 'compare' | 'scripture' | 'icon' | 'outro' | 'image' | 'chapter' | 'timeline' | 'checklist' | 'iconGrid';
   src?: string;
   emoji?: string; text?: string; highlight?: string[]; cta?: string;
   value?: number; prefix?: string; suffix?: string; label?: string; sub?: string; decimals?: number;

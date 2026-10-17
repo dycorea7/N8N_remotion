@@ -4,7 +4,7 @@
 export const FPS = 30;
 const TAIL_SEC = 0.9;
 
-const VISUAL_TYPES = ['headline', 'stat', 'chart', 'list', 'quote', 'compare', 'scripture', 'icon', 'outro', 'image', 'chapter'];
+const VISUAL_TYPES = ['headline', 'stat', 'chart', 'list', 'quote', 'compare', 'scripture', 'icon', 'outro', 'image', 'chapter', 'timeline', 'checklist', 'iconGrid'];
 
 /** 문자 배열 → 단어 [{text, start, end, charStart, charEnd}] */
 export function wordsFromAlignment(chars, starts, ends) {
@@ -88,6 +88,21 @@ export function sanitizeVisual(v, narration) {
   }
   if (t === 'list') {
     const items = (Array.isArray(v.items) ? v.items : []).map(x => clean(x, 26)).filter(Boolean).slice(0, 4);
+    if (items.length < 2) return fallback;
+    return { ...out, title: clean(v.title, 28), items };
+  }
+  if (t === 'timeline') {
+    const items = (Array.isArray(v.items) ? v.items : []).map(it => ({ label: clean(it && it.label, 12), text: clean(it && (it.text || it.title), 26) })).filter(it => it.label || it.text).slice(0, 4);
+    if (items.length < 2) return fallback;
+    return { ...out, title: clean(v.title, 28), items };
+  }
+  if (t === 'checklist') {
+    const items = (Array.isArray(v.items) ? v.items : []).map(x => clean(typeof x === 'string' ? x : x && (x.text || x.label), 26)).filter(Boolean).slice(0, 4);
+    if (items.length < 2) return fallback;
+    return { ...out, title: clean(v.title, 28), items };
+  }
+  if (t === 'iconGrid') {
+    const items = (Array.isArray(v.items) ? v.items : []).map(it => ({ emoji: clean(it && (it.emoji || it.icon), 4), label: clean(it && (it.label || it.text), 12) })).filter(it => it.label).slice(0, 4);
     if (items.length < 2) return fallback;
     return { ...out, title: clean(v.title, 28), items };
   }

@@ -10,6 +10,8 @@ import { resolveSrc } from './assets';
 
 loadFonts();
 
+const OVERLAP = 5; // 프레임 (짧게: 글자끼리 겹쳐 보이는 시간을 줄인다)
+
 export const Short: React.FC<ShortProps> = (props) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames, width, height } = useVideoConfig();
@@ -24,9 +26,11 @@ export const Short: React.FC<ShortProps> = (props) => {
       {props.scenes.map((s, i) => {
         const from = Math.round(s.start * fps);
         const dur = Math.max(1, Math.round(s.end * fps) - from);
+        // 마지막 장면이 아니면 다음 장면과 OVERLAP 프레임 겹쳐 크로스페이드 (장면 사이가 어두워지지 않게)
+        const ov = i < props.scenes.length - 1 ? Math.min(OVERLAP, Math.floor(dur / 3)) : 0;
         return (
-          <Sequence key={i} from={from} durationInFrames={dur} name={`${i}:${s.visual.type}`}>
-            <SceneView scene={s} theme={theme} index={i} durationInFrames={dur} lang={props.lang} />
+          <Sequence key={i} from={from} durationInFrames={dur + ov} name={`${i}:${s.visual.type}`}>
+            <SceneView scene={s} theme={theme} index={i} durationInFrames={dur + ov} overlap={ov} lang={props.lang} category={props.category} />
           </Sequence>
         );
       })}
