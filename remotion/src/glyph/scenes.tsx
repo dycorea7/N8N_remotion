@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { AbsoluteFill, Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { resolveSrc } from '../assets';
-import { Center, P, Sfx, TEMPLATES, fmt, iconFor, spokenFrame, useLandscape } from '../scenes';
+import { Center, P, Sfx, TEMPLATES, counterProgress, counterTiming, fmt, iconFor, useLandscape } from '../scenes';
 import { GlyphRaster, svgDataUrl } from './GlyphRaster';
 import { ArcText, DecodeText, MixedType, Typewriter } from './text';
 import { F, GlyphTheme, clamp01, easeOut, glyphFill, hash, neon } from './util';
@@ -64,13 +64,12 @@ const Stat: React.FC<GP> = ({ scene, theme, lang, durationInFrames }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const target = v.value || 0;
-  const spokenAt = spokenFrame(scene, fmt(target, 0, 'en').replace(/,/g, ''), fps);
-  const startF = Math.min(10, Math.max(4, (spokenAt ?? 10) - 10));
-  const countLen = Math.round(Math.min(44, durationInFrames * 0.42));
-  const p = interpolate(frame, [startF, startF + countLen], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.exp) });
-  const shown = fmt(target * p, v.decimals || 0, lang);
+  const { startF, countLen } = counterTiming(scene, target, fps, durationInFrames);
+  const p = counterProgress(frame, { startF, countLen, endF: startF + countLen });
+  const shown = fmt(p >= 1 ? target : target * p, v.decimals || 0, lang);
   // 숫자가 정해지기 전에는 끝자리가 무작위로 흔들린다 (해독되는 느낌)
-  const scr = p < 1 ? shown.replace(/\d(?=[^\d]*$)/, String(Math.floor(hash(frame) * 10))) : shown;
+  // 올라가는 동안에만 끝자리가 흔들리고, 멈출 무렵(85%)부터는 진짜 숫자만 보인다
+  const scr = p > 0 && p < 0.85 ? shown.replace(/\d(?=[^\d]*$)/, String(Math.floor(hash(frame) * 10))) : shown;
   const digits = shown.length + (v.prefix || '').length + (v.suffix || '').length;
   const size = digits > 9 ? 170 : digits > 6 ? 220 : 270;
   const pop = spring({ frame: frame - startF - countLen, fps, config: { damping: 7, stiffness: 220 } });

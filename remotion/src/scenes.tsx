@@ -125,6 +125,23 @@ export const KineticText: React.FC<{ text: string; highlight?: string[]; theme: 
 
 export const fmt = (v: number, d: number, lang: string) => v.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 
+/** 숫자 카운터 타이밍: 나레이션이 그 숫자를 말하는 순간(약 0.2초 뒤)에 정확히 멈춘다.
+ *  숫자를 못 찾으면 장면 중간쯤 멈춘다. 끝난 뒤에는 p가 정확히 1이라 숫자가 더 움직이지 않는다. */
+export function counterTiming(scene: Scene, target: number, fps: number, dur: number) {
+  const key = fmt(Math.trunc(Math.abs(target)), 0, 'en').replace(/,/g, '');
+  const spokenAt = spokenFrame(scene, key, fps);
+  let endF = spokenAt != null ? spokenAt + Math.round(fps * 0.2) : Math.round(dur * 0.45);
+  endF = Math.max(Math.round(fps * 0.55), Math.min(endF, Math.round(dur * 0.7)));
+  const startF = Math.max(3, endF - Math.round(Math.min(fps * 1.4, dur * 0.4)));
+  return { startF, endF, countLen: Math.max(1, endF - startF) };
+}
+export function counterProgress(frame: number, t: { startF: number; endF: number; countLen: number }) {
+  if (frame >= t.endF) return 1;
+  if (frame <= t.startF) return 0;
+  const x = (frame - t.startF) / t.countLen;
+  return 1 - Math.pow(1 - x, 3);
+}
+
 // ── 장면 템플릿 ──
 const Headline: React.FC<P> = ({ scene, theme, lang, category }) => {
   const v = scene.visual;
@@ -144,12 +161,10 @@ const Stat: React.FC<P> = ({ scene, theme, lang, durationInFrames }) => {
   const { fps } = useVideoConfig();
   const target = v.value || 0;
   // 숫자는 장면 시작과 함께 올라간다 (말할 때까지 0으로 멈춰 있지 않게). 나레이션이 일찍 말하면 그때에 맞춘다.
-  const spokenAt = spokenFrame(scene, fmt(target, 0, 'en').replace(/,/g, ''), fps);
-  const startF = Math.min(10, Math.max(4, (spokenAt ?? 10) - 10));
-  const countLen = Math.round(Math.min(48, durationInFrames * 0.45));
-  const p = interpolate(frame, [startF, startF + countLen], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.exp) });
+  const { startF, countLen } = counterTiming(scene, target, fps, durationInFrames);
+  const p = counterProgress(frame, { startF, countLen, endF: startF + countLen });
   const tickAt = Array.from({ length: 7 }, (_, k) => startF + Math.round(countLen * (1 - Math.pow(1 - (k + 1) / 8, 2.2))));
-  const shown = fmt(target * p, v.decimals || 0, lang);
+  const shown = fmt(p >= 1 ? target : target * p, v.decimals || 0, lang);
   const isPct = /%|퍼센트/.test(v.suffix || '') && target <= 100;
   const pop = spring({ frame: frame - startF - countLen, fps, config: { damping: 8, stiffness: 200 } });
   const R = 300, C = 2 * Math.PI * R;
