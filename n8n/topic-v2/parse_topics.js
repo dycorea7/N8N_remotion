@@ -49,10 +49,13 @@ for (const t of parsed.topics) {
   // 시트의 Topic: 성경은 「테마 | 구절」(기존 형식), 나머지는 「제목 — 각도」
   const topic = pillar === 'bible' ? title + (angle ? ' — ' + angle : '') + ' | ' + ref : title + (angle ? ' — ' + angle : '');
   shapes[t.shape] = (shapes[t.shape] || 0) + 1;
-  accepted.push({ Topic: topic, Language: 'Korean', Status: 'pending', VideoURL: '' });
+  // Pillar는 텔레그램 요약용 (시트에는 Topic/Language/Status/VideoURL만 들어간다)
+  accepted.push({ Topic: topic, Language: 'Korean', Status: 'pending', VideoURL: '', Pillar: pillar });
   console.log('✔ [' + pillar + '/' + (t.shape || '?') + '] ' + topic + (t.evidence ? '  ← ' + t.evidence : ''));
 }
 if (!accepted.length) throw new Error('생성된 ' + parsed.topics.length + '개가 모두 제외되었습니다 — 재시도하세요. 제외: ' + rejected.join(' | '));
 console.log('accepted ' + accepted.length + ', rejected ' + rejected.length + ' | 훅 유형 ' + JSON.stringify(shapes));
 if (rejected.length) console.log('rejected: ' + rejected.join(' | '));
+// 제외 목록은 첫 항목에 붙여 텔레그램 요약에서 쓴다
+accepted[0].Rejected = rejected;
 return accepted.map(function (json) { return { json: json }; });
