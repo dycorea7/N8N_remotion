@@ -46,6 +46,7 @@ const isSermon = /아멘|Amen/.test(script.slice(-400)) || String(parsed.categor
 let category = String(parsed.category || '').trim().toLowerCase();
 if (!CATEGORIES.includes(category)) category = isSermon ? 'bible' : 'other';
 const mood = MOODS.includes(parsed.mood) ? parsed.mood : 'calm_reflective';
+const styleFit = ['hud', 'classic', 'either'].includes(String(parsed.style || '').trim().toLowerCase()) ? String(parsed.style).trim().toLowerCase() : 'either';
 
 // 이미지 장면: 개수 상한, 연속 금지, 프롬프트 너무 짧으면 headline
 let imageCount = 0, prevImage = false;
@@ -75,12 +76,12 @@ const tags = (Array.isArray(parsed.tags) ? parsed.tags : []).map(t => s(t).repla
 let tagStr = '';
 for (const t of tags) { if ((tagStr + ',' + t).length > 450) break; tagStr = tagStr ? tagStr + ',' + t : t; }
 
-console.log('chars: ' + len + ' | chapters: ' + chapters.length + ' | scenes: ' + scenes.length + ' | images: ' + imageCount + ' | ' + category + '/' + mood + (warnings.length ? ' | ' + warnings.join(' ') : ''));
+console.log('chars: ' + len + ' | chapters: ' + chapters.length + ' | scenes: ' + scenes.length + ' | images: ' + imageCount + ' | ' + category + '/' + mood + ' | style ' + styleFit + (warnings.length ? ' | ' + warnings.join(' ') : ''));
 return [{ json: {
   title: s(parsed.title || src.Topic).slice(0, 100),
   description: s(parsed.description),
   hashtags, tagStr, script, scenes, chapters, thumbnail,
-  category, mood, imageCount, format: isSermon ? 'sermon' : 'essay',
+  category, mood, styleFit, imageCount, format: isSermon ? 'sermon' : 'essay',
   scriptLength: len, warnings,
   topic: src.Topic, language: src.Language || 'Korean', subtitleLang,
   shortVideoId: src.shortVideoId, shortViews: src.shortViews

@@ -4,8 +4,20 @@ const GITHUB_REPO = 'dycorea7/N8N_remotion';
 const GITHUB_BRANCH = 'main';
 const MUSIC_VOLUME = 0.10;   // 롱폼은 오래 들으니 쇼츠보다 낮게
 // 영상 스타일: 'classic' = 기존 카드형 / 'glyph' = 글자로 그린 이미지·글자 바닥·네온 타이포 (참고 영상 스타일)
-const VIDEO_STYLE = 'classic';
+// 롱폼은 글리프를 쓰지 않는다 (렌더가 너무 오래 걸림). 'hud' = 에디토리얼 HUD
+const STYLE_BY_CATEGORY = {};
 // ================
+
+// 영상 스타일
+//  - 카테고리 고정: STYLE_BY_CATEGORY (경제 = glyph)
+//  - 설교·성경: 항상 classic
+//  - 나머지: Claude가 주제에 맞다고 고른 스타일(hud / classic). 'either'면 날마다 번갈아 쓴다
+function pickStyle(p) {
+  if (STYLE_BY_CATEGORY[p.category]) return STYLE_BY_CATEGORY[p.category];
+  if (p.format === 'sermon' || p.category === 'bible') return 'classic';
+  if (p.styleFit === 'hud' || p.styleFit === 'classic') return p.styleFit;
+  return Math.floor(Date.now() / 86400000) % 2 ? 'hud' : 'classic';
+}
 
 if (!GITHUB_REPO) throw new Error('Build Render Job 노드의 GITHUB_REPO에 저장소 이름(아이디/저장소)을 입력하세요');
 
@@ -53,7 +65,7 @@ const job = {
   job_id: jobId, format: 'long', fps: 24, lang: p.subtitleLang, category: p.category, title: p.title,
   chapters: p.chapters, thumbnail: Object.assign({}, p.thumbnail, { src: thumbSrc }),
   scenes, alignment: tts.alignment, audio_base64: tts.audio_base64,
-  music_url: musicUrl, music_volume: MUSIC_VOLUME, style: VIDEO_STYLE
+  music_url: musicUrl, music_volume: MUSIC_VOLUME, style: pickStyle(p)
 };
 const text = JSON.stringify(job);
 console.log('job ' + jobId + ' | ' + Math.round(text.length / 1024) + 'KB | images ' + imagesOk + ' ok / ' + imagesFailed + ' failed | music: ' + musicName);

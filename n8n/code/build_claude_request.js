@@ -113,11 +113,18 @@ title: under 90 characters, hook front-loaded; include the scripture reference f
 description: two or three lines on the question the video answers; three lines starting with ✔ naming situations the viewer might be in; one line on what they gain; channel line (Korean: 📌 Next You Global 채널은 성경 말씀, 동기부여, 부자 마인드셋, 자기계발 쇼츠를 업로드합니다. English: 📌 Next You Global posts Bible devotionals, motivation, wealth mindset and self-improvement shorts.); subscribe line (Korean: 👉 구독 & 좋아요로 함께 성장해요! English: 👉 Subscribe and like to grow with us!).
 hashtags: 12 to 16, specific first, then broad, then #NextYouGlobal.
 
+=== VISUAL STYLE ===
+style: EXACTLY ONE of hud, classic, either - which motion-graphics look suits this topic.
+- hud: a sharp, modern editorial look (camera tracking boxes, spec-sheet and tag cards, split-flap numbers, black and white with one orange accent). Fits the mind and brain, habits, productivity, modern life, technology, data-driven health facts, sharp contrarian takes.
+- classic: soft gradients, rounded cards, warm colours. Fits emotional, warm or comforting topics - family and parents, love, grief, gratitude, loneliness, aging gracefully, faith and prayer.
+- either: both would work equally well.
+Sermons and faith topics are always classic.
+
 === MUSIC ===
 mood: EXACTLY ONE of calm_reflective, hopeful_uplifting, tense_dramatic, dark_serious, warm_gentle.
 
 Respond ONLY with valid JSON, no markdown fences:
-{"title":"...","description":"...","hashtags":["#tag"],"format":"sermon or essay","category":"bible|quote|wealth|health|other","mood":"...","scenes":[{"narration":"...","visual":{"type":"headline","text":"...","highlight":["..."],"emoji":"..."}}]}`;
+{"title":"...","description":"...","hashtags":["#tag"],"format":"sermon or essay","category":"bible|quote|wealth|health|other","mood":"...","style":"hud|classic|either","scenes":[{"narration":"...","visual":{"type":"headline","text":"...","highlight":["..."],"emoji":"..."}}]}`;
 
 console.log('seed ' + seed + ' | sermon: ' + sermonShape.split(' - ')[0] + ' | essay: ' + essayFormat.split(' - ')[0]);
 return [{ json: { body: { model: 'claude-sonnet-4-6', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] }, Topic: topic, Language: language, row_number: $json.row_number, useImages: USE_AI_IMAGES, maxImages: MAX_IMAGES } }];
