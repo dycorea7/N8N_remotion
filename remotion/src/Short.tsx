@@ -10,6 +10,9 @@ import { GlyphFloor } from './glyph/GlyphFloor';
 import { GlyphSceneView, FilmFx } from './glyph/scenes';
 import { FONT_LOADS, glyphThemeFor } from './glyph/util';
 import { useState } from 'react';
+import { Backdrop, Chrome, FilmFx as HudFilm, HudCaptions } from './hud/chrome';
+import { HudSceneView } from './hud/scenes';
+import { FONT_LOADS as HUD_FONTS, HUD_THEME } from './hud/util';
 import { resolveSrc } from './assets';
 
 loadFonts();
@@ -21,16 +24,18 @@ export const Short: React.FC<ShortProps> = (props) => {
   const { fps, durationInFrames, width, height } = useVideoConfig();
   const landscape = width > height;
   const glyph = props.style === 'glyph';
-  const theme = glyph ? glyphThemeFor(props.category) : themeFor(props.category);
-  useState(() => { if (glyph) loadTextFonts(FONT_LOADS, allText(props)); return 0; });
+  const hud = props.style === 'hud';
+  const theme = hud ? HUD_THEME : glyph ? glyphThemeFor(props.category) : themeFor(props.category);
+  useState(() => { if (glyph) loadTextFonts(FONT_LOADS, allText(props)); if (hud) loadTextFonts(HUD_FONTS, allText(props)); return 0; });
+  const ticker = React.useMemo(() => hud ? props.scenes.map(s => { const v: any = s.visual; return String(v.text || v.title || v.label || '').trim(); }).filter(Boolean).map(x => x.slice(0, 24)) : [], [hud, props.scenes]);
   const floorWords = React.useMemo(() => glyph ? Array.from(new Set(props.scenes.flatMap(s => s.narration.split(/\s+/)).map(w => w.replace(/[^\p{L}\p{N}]/gu, '')).filter(w => w.length >= 2))).slice(0, 120) : [], [glyph, props.scenes]);
-  const View = glyph ? GlyphSceneView : SceneView;
+  const View = hud ? HudSceneView : glyph ? GlyphSceneView : SceneView;
   const t = frame / fps;
   const sceneIndex = Math.max(0, props.scenes.findIndex(s => t >= s.start && t < s.end));
   const musicVol = props.musicVolume ?? 0.16;
   return (
     <AbsoluteFill style={{ backgroundColor: theme.bg1 }}>
-      {glyph ? <GlyphFloor theme={theme as any} words={floorWords} sceneIndex={sceneIndex} /> : <Background theme={theme} sceneIndex={sceneIndex} />}
+      {hud ? <Backdrop /> : glyph ? <GlyphFloor theme={theme as any} words={floorWords} sceneIndex={sceneIndex} /> : <Background theme={theme} sceneIndex={sceneIndex} />}
       {props.scenes.map((s, i) => {
         const from = Math.round(s.start * fps);
         const dur = Math.max(1, Math.round(s.end * fps) - from);
@@ -43,8 +48,10 @@ export const Short: React.FC<ShortProps> = (props) => {
         );
       })}
       {glyph && <FilmFx />}
-      <Captions captions={props.captions} theme={theme} lang={props.lang} />
-      {landscape && props.chapters && props.chapters.length > 1 && <ChapterLabel chapters={props.chapters} t={t} theme={theme} />}
+      {hud && <HudFilm dark={props.scenes[sceneIndex]?.visual.type === 'image'} />}
+      {hud && <Chrome dark={props.scenes[sceneIndex]?.visual.type === 'image'} sceneIndex={sceneIndex} sceneCount={props.scenes.length} ticker={ticker} />}
+      {hud ? <HudCaptions captions={props.captions} lang={props.lang} /> : <Captions captions={props.captions} theme={theme} lang={props.lang} />}
+      {!hud && landscape && props.chapters && props.chapters.length > 1 && <ChapterLabel chapters={props.chapters} t={t} theme={theme} />}
       {/* 진행 바 */}
       <div style={{ position: 'absolute', left: 0, top: 0, height: 10, width: `${(frame / durationInFrames) * 100}%`, background: theme.accent, opacity: 0.85 }} />
       {props.audioSrc && <Audio src={resolveSrc(props.audioSrc)!} />}

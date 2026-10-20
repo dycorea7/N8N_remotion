@@ -17,6 +17,6 @@ export type ShortProps = {
   scenes: Scene[]; captions: Caption[];
   audioSrc?: string; musicSrc?: string; musicVolume?: number; title?: string;
   chapters?: Chapter[];
-  style?: 'classic' | 'glyph';
+  style?: 'classic' | 'glyph' | 'hud';
 };
 export type ThumbProps = { category: string; lang: 'ko' | 'en'; text: string; highlight?: string[]; src?: string; badge?: string };
