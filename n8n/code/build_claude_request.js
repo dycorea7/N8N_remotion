@@ -114,17 +114,18 @@ description: two or three lines on the question the video answers; three lines s
 hashtags: 12 to 16, specific first, then broad, then #NextYouGlobal.
 
 === VISUAL STYLE ===
-style: EXACTLY ONE of hud, classic, either - which motion-graphics look suits this topic.
-- hud: a sharp, modern editorial look (camera tracking boxes, spec-sheet and tag cards, split-flap numbers, black and white with one orange accent). Fits the mind and brain, habits, productivity, modern life, technology, data-driven health facts, sharp contrarian takes.
+style: EXACTLY ONE of hud, classic, pop, either - which motion-graphics look suits this topic.
+- hud: a sharp, modern editorial look (camera tracking boxes, spec-sheet and tag cards, split-flap numbers, black and white with one orange accent). Fits the mind and brain, psychology, how things really work, modern life, technology, data-driven health facts, sharp contrarian takes.
 - classic: soft gradients, rounded cards, warm colours. Fits emotional, warm or comforting topics - family and parents, love, grief, gratitude, loneliness, aging gracefully, faith and prayer.
-- either: both would work equally well.
+- pop: loud, playful colour blocks (orange, lime, electric blue), giant bouncing type, morphing shapes, bright patterns. Fits energetic, upbeat topics - habits and routines, motivation, productivity, quick tips and hacks, numbered methods, fun facts.
+- either: two or more would work equally well.
 Sermons and faith topics are always classic.
 
 === MUSIC ===
 mood: EXACTLY ONE of calm_reflective, hopeful_uplifting, tense_dramatic, dark_serious, warm_gentle.
 
 Respond ONLY with valid JSON, no markdown fences:
-{"title":"...","description":"...","hashtags":["#tag"],"format":"sermon or essay","category":"bible|quote|wealth|health|other","mood":"...","style":"hud|classic|either","scenes":[{"narration":"...","visual":{"type":"headline","text":"...","highlight":["..."],"emoji":"..."}}]}`;
+{"title":"...","description":"...","hashtags":["#tag"],"format":"sermon or essay","category":"bible|quote|wealth|health|other","mood":"...","style":"hud|classic|pop|either","scenes":[{"narration":"...","visual":{"type":"headline","text":"...","highlight":["..."],"emoji":"..."}}]}`;
 
 console.log('seed ' + seed + ' | sermon: ' + sermonShape.split(' - ')[0] + ' | essay: ' + essayFormat.split(' - ')[0]);
 return [{ json: { body: { model: 'claude-sonnet-4-6', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] }, Topic: topic, Language: language, row_number: $json.row_number, useImages: USE_AI_IMAGES, maxImages: MAX_IMAGES } }];

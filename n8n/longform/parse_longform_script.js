@@ -46,7 +46,7 @@ const isSermon = /아멘|Amen/.test(script.slice(-400)) || String(parsed.categor
 let category = String(parsed.category || '').trim().toLowerCase();
 if (!CATEGORIES.includes(category)) category = isSermon ? 'bible' : 'other';
 const mood = MOODS.includes(parsed.mood) ? parsed.mood : 'calm_reflective';
-const styleFit = ['hud', 'classic', 'either'].includes(String(parsed.style || '').trim().toLowerCase()) ? String(parsed.style).trim().toLowerCase() : 'either';
+const styleFit = ['hud', 'classic', 'pop', 'either'].includes(String(parsed.style || '').trim().toLowerCase()) ? String(parsed.style).trim().toLowerCase() : 'either';
 
 // 이미지 장면: 개수 상한, 연속 금지, 프롬프트 너무 짧으면 headline
 let imageCount = 0, prevImage = false;

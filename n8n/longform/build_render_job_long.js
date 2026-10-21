@@ -4,19 +4,20 @@ const GITHUB_REPO = 'dycorea7/N8N_remotion';
 const GITHUB_BRANCH = 'main';
 const MUSIC_VOLUME = 0.10;   // 롱폼은 오래 들으니 쇼츠보다 낮게
 // 영상 스타일: 'classic' = 기존 카드형 / 'glyph' = 글자로 그린 이미지·글자 바닥·네온 타이포 (참고 영상 스타일)
-// 롱폼은 글리프를 쓰지 않는다 (렌더가 너무 오래 걸림). 'hud' = 에디토리얼 HUD
+// 롱폼은 글리프를 쓰지 않는다 (렌더가 너무 오래 걸림). 'hud' = 에디토리얼 HUD / 'pop' = 원색 블록·초대형 타이포·도형 모핑
 const STYLE_BY_CATEGORY = {};
 // ================
 
 // 영상 스타일
 //  - 카테고리 고정: STYLE_BY_CATEGORY (경제 = glyph)
 //  - 설교·성경: 항상 classic
-//  - 나머지: Claude가 주제에 맞다고 고른 스타일(hud / classic). 'either'면 날마다 번갈아 쓴다
+//  - 나머지: Claude가 주제에 맞다고 고른 스타일(hud / classic / pop). 'either'면 세 가지를 날마다 돌아가며 쓴다
+const ROTATION = ['classic', 'hud', 'pop'];
 function pickStyle(p) {
   if (STYLE_BY_CATEGORY[p.category]) return STYLE_BY_CATEGORY[p.category];
   if (p.format === 'sermon' || p.category === 'bible') return 'classic';
-  if (p.styleFit === 'hud' || p.styleFit === 'classic') return p.styleFit;
-  return Math.floor(Date.now() / 86400000) % 2 ? 'hud' : 'classic';
+  if (ROTATION.includes(p.styleFit)) return p.styleFit;
+  return ROTATION[Math.floor(Date.now() / 86400000) % ROTATION.length];
 }
 
 if (!GITHUB_REPO) throw new Error('Build Render Job 노드의 GITHUB_REPO에 저장소 이름(아이디/저장소)을 입력하세요');
