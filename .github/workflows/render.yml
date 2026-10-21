@@ -47,8 +47,8 @@ jobs:
           cache: npm
           cache-dependency-path: remotion/package-lock.json
 
-      - name: Install emoji font
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-color-emoji
+      - name: Install emoji font and ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-color-emoji ffmpeg
 
       - name: Install dependencies
         working-directory: remotion

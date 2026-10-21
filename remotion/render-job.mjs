@@ -5,6 +5,7 @@
 //   썸네일이 있으면 <출력>.jpg 도 만든다.
 // 결과 요약은 <출력>.result.json 으로 남긴다.
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bundle } from '@remotion/bundler';
@@ -105,6 +106,27 @@ if (isLong && job.thumbnail && job.thumbnail.text) {
   } catch (e) { warnings.push('썸네일 생성 실패: ' + e.message); thumbPath = null; }
 }
 
+
+// ── 음량 맞추기: 유튜브 기준(-14 LUFS)으로 전체 소리를 올린다 (영상은 다시 인코딩하지 않음) ──
+// 유튜브는 큰 소리만 줄이고 작은 소리는 키워 주지 않아서, 작게 올리면 그대로 작게 들린다.
+const TARGET_LUFS = -14;
+function normalizeLoudness(file, bitrate) {
+  const ff = (args) => spawnSync('ffmpeg', ['-hide_banner', '-nostdin', ...args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const ln = `loudnorm=I=${TARGET_LUFS}:TP=-1.5:LRA=11`;
+  const p1 = ff(['-i', file, '-map', '0:a:0', '-af', `${ln}:print_format=json`, '-f', 'null', '-']);
+  if (p1.error) return { skipped: 'ffmpeg 없음: ' + p1.error.message };
+  const m = String(p1.stderr || '').match(/\{[\s\S]*?"input_i"[\s\S]*?\}/);
+  if (!m) return { skipped: '음량 측정 실패' };
+  const j = JSON.parse(m[0]);
+  const tmp = file.replace(/\.mp4$/, '') + '.norm.mp4';
+  const p2 = ff(['-y', '-i', file, '-map', '0:v:0', '-map', '0:a:0', '-c:v', 'copy',
+    '-af', `${ln}:measured_I=${j.input_i}:measured_TP=${j.input_tp}:measured_LRA=${j.input_lra}:measured_thresh=${j.input_thresh}:offset=${j.target_offset}:linear=true,aresample=48000`,
+    '-c:a', 'aac', '-b:a', bitrate, '-movflags', '+faststart', tmp]);
+  if (p2.status !== 0 || !fs.existsSync(tmp)) return { skipped: '음량 적용 실패: ' + String(p2.stderr || '').slice(-300) };
+  fs.renameSync(tmp, file);
+  return { before_lufs: Number(j.input_i), target_lufs: TARGET_LUFS };
+}
+
 const tr = Date.now();
 let lastLog = 0;
 await renderMedia({
@@ -112,6 +134,10 @@ await renderMedia({
   outputLocation: outArg, browserExecutable: BROWSER, timeoutInMilliseconds: 120000,
   onProgress: ({ progress }) => { const step = isLong ? 20 : 10; const p = Math.floor(progress * step); if (p > lastLog) { lastLog = p; console.log(`render ${Math.round(p * 100 / step)}% (${((Date.now() - tr) / 60000).toFixed(1)}분)`); } },
 });
+
+const loudness = normalizeLoudness(outArg, isLong ? '160k' : '192k');
+if (loudness.skipped) warnings.push('음량 맞추기 생략: ' + loudness.skipped);
+else console.log(`loudness ${loudness.before_lufs} → ${loudness.target_lufs} LUFS`);
 
 const result = {
   job_id: id,
@@ -125,6 +151,7 @@ const result = {
   chapters: props.chapters || [],
   thumbnail: thumbPath ? path.basename(thumbPath) : null,
   images: { ok: imgOk, failed: imgFail },
+  loudness,
   warnings,
 };
 fs.writeFileSync(outArg + '.result.json', JSON.stringify(result));
