@@ -8,6 +8,7 @@ export type Visual = {
   author?: string;
   left?: { label: string; text: string }; right?: { label: string; text: string };
   number?: number;
+  bgSrc?: string; // 그래픽 장면 뒤 AI 사진 배경
 };
 export type Scene = { start: number; end: number; narration: string; words: Word[]; visual: Visual; chapter?: number };
 export type Caption = { start: number; end: number; words: Word[] };

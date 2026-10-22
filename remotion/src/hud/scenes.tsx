@@ -1,6 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, Img, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { resolveSrc } from '../assets';
+import { SceneBg, hasBg } from '../SceneBg';
 import { Center, P, Sfx, TEMPLATES, counterProgress, counterTiming, fmt, iconFor, revealFrames, useLandscape } from '../scenes';
 import { Typewriter } from '../glyph/text';
 import { Mono, SplitFlap, Statement, TagCard, TrackBox } from './parts';
@@ -434,6 +435,7 @@ export const HudSceneView: React.FC<P> = (p) => {
   return (
     <AbsoluteFill style={{ opacity: out }}>
       <AbsoluteFill style={{ transform: `scale(${1.05 - 0.05 * snap})` }}>
+        {hasBg(p.scene.visual) && <SceneBg src={p.scene.visual.bgSrc!} durationInFrames={p.durationInFrames} mode="paper" index={p.index} />}
         <T {...p} />
       </AbsoluteFill>
       {flash > 0 && <AbsoluteFill style={{ background: '#ffffff', opacity: flash * 0.55 }} />}

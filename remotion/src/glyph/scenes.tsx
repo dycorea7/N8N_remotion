@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { AbsoluteFill, Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { resolveSrc } from '../assets';
+import { SceneBg, hasBg } from '../SceneBg';
 import { Center, P, Sfx, TEMPLATES, counterProgress, counterTiming, fmt, iconFor, useLandscape } from '../scenes';
 import { GlyphRaster, svgDataUrl } from './GlyphRaster';
 import { ArcText, DecodeText, MixedType, Typewriter } from './text';
@@ -256,6 +257,7 @@ export const GlyphSceneView: React.FC<GP> = (p) => {
   const whoosh = p.index > 0 && type !== 'chapter' && type !== 'scripture';
   return (
     <AbsoluteFill style={{ opacity: opacity * out, transform: isImage ? undefined : transform, filter: isImage && kind !== 'glitch' ? undefined : filter }}>
+      {hasBg(p.scene.visual) && <SceneBg src={p.scene.visual.bgSrc!} durationInFrames={p.durationInFrames} mode="dark" index={p.index} />}
       <T {...p} />
       {whoosh && <Sfx name="whoosh" at={0} volume={isImage ? 0.2 : 0.13} />}
     </AbsoluteFill>

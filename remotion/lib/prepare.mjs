@@ -48,6 +48,12 @@ export function chunkCaptions(words, lang, sceneBreaks) {
   return chunks;
 }
 
+/** 그래픽 장면 뒤 사진 배경: 받은 파일(job/...) 또는 URL일 때만 붙인다 */
+function withBg(out, v) {
+  const src = String((v && v.bgSrc) || '');
+  if (out.type !== 'image' && out.type !== 'chapter' && /^(https?:\/\/|job\/)/.test(src)) out.bgSrc = src;
+  return out;
+}
 function clean(v, n) { return String(v == null ? '' : v).trim().slice(0, n); }
 function num(v) { const n = typeof v === 'number' ? v : Number(String(v).replace(/[,\s]/g, '')); return Number.isFinite(n) ? n : null; }
 
@@ -167,7 +173,7 @@ export function prepare(req) {
     const lo = sceneCharStarts[i], hi = i + 1 < sceneCharStarts.length ? sceneCharStarts[i + 1] : chars.length;
     const sceneWords = words.filter(w => w.charStart >= lo && w.charStart < hi).map(w => ({ text: w.text, start: w.start, end: w.end }));
     const chapter = Number.isInteger(s.chapter) ? s.chapter : undefined;
-    return { start, end, narration: narrations[i], words: sceneWords, visual: sanitizeVisual(s.visual, narrations[i]), chapter };
+    return { start, end, narration: narrations[i], words: sceneWords, visual: withBg(sanitizeVisual(s.visual, narrations[i]), s.visual), chapter };
   }).filter(s => s.end - s.start > 0.3);
 
   // 롱폼 챕터: 각 챕터의 첫 장면 시작 시각 (유튜브 설명란 타임스탬프에도 쓴다)

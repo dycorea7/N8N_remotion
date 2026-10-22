@@ -3,6 +3,7 @@ import { AbsoluteFill, Audio, Easing, Img, interpolate, Sequence, spring, static
 import * as Lucide from 'lucide-react';
 import { resolveSrc } from './assets';
 import { Scene, Visual } from './types';
+import { SceneBg, hasBg } from './SceneBg';
 import { Theme, SANS_FONT } from './theme';
 
 export type P = { scene: Scene; theme: Theme; index: number; durationInFrames: number; lang: string; category?: string; overlap?: number };
@@ -508,8 +509,9 @@ export const SceneView: React.FC<P> = (p) => {
   const whoosh = p.index > 0 && type !== 'chapter' && type !== 'scripture';
   return (
     <AbsoluteFill style={{ opacity: fadeIn * out, transform, filter, clipPath }}>
+      {hasBg(p.scene.visual) && <SceneBg src={p.scene.visual.bgSrc!} durationInFrames={p.durationInFrames} mode="dark" index={p.index} />}
       <T {...p} />
-      {whoosh && <Sfx name="whoosh" at={0} volume={isImage ? 0.2 : 0.13} />}
+      {whoosh && <Sfx name="whoosh" at={0} volume={isImage || hasBg(p.scene.visual) ? 0.2 : 0.13} />}
     </AbsoluteFill>
   );
 };

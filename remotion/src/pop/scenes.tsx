@@ -1,6 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, Img, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { resolveSrc } from '../assets';
+import { SceneBg } from '../SceneBg';
 import { Caption } from '../types';
 import { Center, P, Sfx, TEMPLATES, counterProgress, counterTiming, fmt, iconFor, revealFrames, useLandscape } from '../scenes';
 import { Typewriter } from '../glyph/text';
@@ -51,7 +52,13 @@ const GiantWords: React.FC<{ text: string; highlight?: string[]; color: string; 
   );
 };
 
-const Bg: React.FC<{ color: string; children?: React.ReactNode }> = ({ color, children }) => <AbsoluteFill style={{ background: color }}>{children}</AbsoluteFill>;
+/** 장면 배경 블록. 사진 배경(bgSrc)이 있으면 흑백 사진에 블록 색을 곱한 듀오톤으로 */
+const BgCtx = React.createContext<{ src?: string; dur: number; index: number }>({ dur: 150, index: 0 });
+const Bg: React.FC<{ color: string; children?: React.ReactNode }> = ({ color, children }) => {
+  const ctx = React.useContext(BgCtx);
+  if (!ctx.src) return <AbsoluteFill style={{ background: color }}>{children}</AbsoluteFill>;
+  return <AbsoluteFill style={{ background: color }}><SceneBg src={ctx.src} durationInFrames={ctx.dur} mode="duotone" color={color} index={ctx.index} />{children}</AbsoluteFill>;
+};
 
 const Headline: React.FC<P> = ({ scene, index }) => {
   const v = scene.visual;
@@ -452,7 +459,8 @@ export const PopSceneView: React.FC<P> = (p) => {
   let clip: string | undefined;
   if (kind === 'wipeUp' && w < 1) clip = `inset(${(1 - w) * 100}% 0 0 0)`;
   if (kind === 'wipeLeft' && w < 1) clip = `inset(0 0 0 ${(1 - w) * 100}%)`;
-  const body = <T {...p} />;
+  const v: any = p.scene.visual;
+  const body = <BgCtx.Provider value={{ src: v.bgSrc && type !== 'image' && type !== 'chapter' ? v.bgSrc : undefined, dur: p.durationInFrames, index: p.index }}><T {...p} /></BgCtx.Provider>;
   return (
     <AbsoluteFill style={{ clipPath: clip }}>
       {kind === 'glitch' ? <GlitchSlices frames={7} seed={p.index}>{body}</GlitchSlices> : body}

@@ -52,16 +52,21 @@ else throw new Error('audio_base64 또는 audio_url이 필요합니다');
 let imgOk = 0, imgFail = 0;
 await Promise.all((job.scenes || []).map(async (s, i) => {
   const v = s && s.visual;
-  if (!v || v.type !== 'image' || !/^https?:\/\//.test(String(v.src || ''))) return;
-  try {
-    const name = `img_${i}${extOf(v.src, '.jpg')}`;
-    fs.writeFileSync(path.join(dir, name), await fetchBuf(v.src, 20e6));
-    v.src = `${rel}/${name}`;
-    imgOk++;
-  } catch (e) {
-    warnings.push(`장면 ${i + 1} 이미지 실패 → 텍스트 장면으로 대체: ${e.message}`);
-    delete v.src;
-    imgFail++;
+  if (!v) return;
+  // 이미지 장면(src)과 그래픽 장면의 사진 배경(bgSrc)
+  for (const key of ['src', 'bgSrc']) {
+    if (key === 'src' && v.type !== 'image') continue;
+    if (!/^https?:\/\//.test(String(v[key] || ''))) continue;
+    try {
+      const name = `${key === 'src' ? 'img' : 'bg'}_${i}${extOf(v[key], '.jpg')}`;
+      fs.writeFileSync(path.join(dir, name), await fetchBuf(v[key], 20e6));
+      v[key] = `${rel}/${name}`;
+      imgOk++;
+    } catch (e) {
+      warnings.push(`장면 ${i + 1} ${key === 'src' ? '이미지 실패 → 텍스트 장면으로 대체' : '사진 배경 실패 → 배경 없이'}: ${e.message}`);
+      delete v[key];
+      imgFail++;
+    }
   }
 }));
 
