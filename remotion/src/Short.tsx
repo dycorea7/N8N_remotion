@@ -16,12 +16,15 @@ import { FONT_LOADS as HUD_FONTS, HUD_THEME } from './hud/util';
 import { PopCaptions, PopChrome, PopSceneView, blockOf } from './pop/scenes';
 import { FONT_LOADS as POP_FONTS, POP_THEME, isLight } from './pop/util';
 import { resolveSrc } from './assets';
+import { KeynoteShort } from './keynote/Keynote';
 
 loadFonts();
 
 const OVERLAP = 5; // 프레임 (짧게: 글자끼리 겹쳐 보이는 시간을 줄인다)
 
 export const Short: React.FC<ShortProps> = (props) => {
+  // 키노트 스타일은 장면·전환·커서·카메라를 통째로 따로 그린다 (스타일은 렌더 중 바뀌지 않음)
+  if (props.style === 'keynote') return <KeynoteShort {...props} />;
   const frame = useCurrentFrame();
   const { fps, durationInFrames, width, height } = useVideoConfig();
   const landscape = width > height;
