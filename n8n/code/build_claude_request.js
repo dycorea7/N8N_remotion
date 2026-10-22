@@ -1,6 +1,6 @@
 // ===== 설정 =====
 const USE_AI_IMAGES = true;   // false면 이미지 없이 모션 그래픽만
-const MAX_IMAGES = 3;         // 영상 한 편에 AI 이미지 장면 최대 개수 (fal.ai 비용)
+const MAX_IMAGES = 6;         // 영상 한 편 AI 그림 최대 개수: 이미지 장면 + 그래픽 뒤 사진 배경(bg) 합계 (fal.ai 비용)
 // ================
 
 const topic = $json.Topic;
@@ -47,9 +47,9 @@ const PHILOSOPHY_HINT = /철학|명언|사상|노자|장자|공자|맹자|도덕
 if (PHILOSOPHY_HINT.test(String(topic))) essayFormat = PHILOSOPHY_FORMAT;
 
 const IMAGE_TYPE = USE_AI_IMAGES ? `
-- image: {"type":"image","prompt":"English image prompt, under 30 words","text":"optional short overlay keyword, max 12 Korean chars / 4 English words","highlight":["word from text"]}  - a full-screen AI illustration (with slow zoom) behind the captions. Use it for 1 to ${MAX_IMAGES} scenes where a concrete moment, place or object makes the viewer feel the script - the hook scene is a good candidate. Never for numbers, lists or comparisons.
-  Image prompt rules: describe only the CONTENT of the scene (the art style is added automatically per category); always give time of day, weather and light; at most one person, written as an adult figure with no age, gender, nationality or ethnicity; never children or minors; ordinary modest clothing, nothing suggestive; never a real identifiable person (when the script names someone, show their world instead - a workshop, a desk, a road); no text, letters or logos in the image; no religious icons of specific figures. Consecutive image scenes must differ in place and distance.` : '';
-const IMAGE_RULE = USE_AI_IMAGES ? `\n- Use at most ${MAX_IMAGES} image scenes, never two in a row.` : '';
+- image: {"type":"image","prompt":"English image prompt, under 30 words","text":"optional short overlay keyword, max 12 Korean chars / 4 English words","highlight":["word from text"]}  - a full-screen AI illustration (with slow zoom) behind the captions. Use it for 2 to 4 scenes where a concrete moment, place or object makes the viewer feel the script - the hook scene is a good candidate. Never for numbers, lists or comparisons (use a graphic with bg for those).
+  Image prompt rules: describe only the CONTENT of the scene (the art style is added automatically per category); always give time of day, weather and light; at most one person, written as an adult figure with no age, gender, nationality or ethnicity; never children or minors; ordinary modest clothing, nothing suggestive; never a real identifiable person (when the script names someone, show their world instead - a workshop, a desk, a road); no text, letters or logos in the image; no religious icons of specific figures. Consecutive image scenes must differ in place and distance.\n- bg (optional field on ANY non-image scene: headline, stat, chart, list, checklist, compare, timeline, icon, iconGrid, quote, scripture, outro): "bg":"English image prompt, under 30 words" puts an AI photo behind that scene's motion graphic, so the viewer sees the picture and the graphic together (the number over the kitchen table, the checklist over the morning street). Same prompt rules as image. Use it on 1 to 3 graphic scenes whose idea has a concrete place or object.` : '';
+const IMAGE_RULE = USE_AI_IMAGES ? `\n- PACING: the video is a flow of pictures with motion graphics woven in between. About half of the scenes show a picture (an image scene, or a graphic with bg); never more than two scenes in a row without a picture; never three image scenes in a row.\n- At most ${MAX_IMAGES} pictures in total (image scenes + bg fields together).` : '';
 
 const prompt = `You are the scriptwriter AND motion designer for NextYou Global, a YouTube Shorts channel covering Bible devotionals, motivation, wealth mindset and self-improvement.
 The video is animated motion graphics (kinetic type, counters, charts, cards) over an animated gradient${USE_AI_IMAGES ? ', plus a few full-screen AI illustrations' : ''}, with word-by-word narration captions in the lower third. You write the narration and design every scene.
@@ -79,9 +79,9 @@ Only quotes genuinely and widely attributed. Facts and figures accurate and main
 For the ending: ${closing}.
 
 === STEP 3: SCENES (this is the motion design) ===
-Split the narration into 7 to 9 scenes, in order. Each scene = { "narration": the exact words spoken during it (one or two sentences), "visual": what is on screen }.
+Split the narration into 8 to 11 scenes, in order. Each scene = { "narration": the exact words spoken during it (one or two sentences), "visual": what is on screen }.
 Joining every narration with a line break must give the complete script - nothing spoken outside scenes. Narration is spoken text only: no stage directions, no emoji, no brackets.
-Each scene lasts while its narration is spoken (about 4-7 seconds), so the visual must be readable at a glance.
+Each scene lasts while its narration is spoken (about 3-6 seconds), so the visual must be readable at a glance.
 
 The narration already appears as captions, so on-screen text must NOT repeat the narration. It is the headline a designer would pull out: the key phrase, number, or contrast, short and punchy.
 

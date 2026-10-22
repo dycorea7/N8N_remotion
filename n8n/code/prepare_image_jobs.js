@@ -71,5 +71,23 @@ const jobs = [];
   } });
 });
 
+// 그래픽 장면 뒤 사진 배경(bg): 글자·그래픽이 올라가므로 단순하고 차분한 구도로
+const BG_FRAME = 'simple uncluttered composition with soft calm areas, gentle depth of field, works as a background behind on-screen graphics';
+(p.scenes || []).forEach((s, i) => {
+  const v = s.visual;
+  if (!v || v.type === 'image' || !v.bg) return;
+  const scene = sanitizePrompt(v.bg);
+  if (scene.replace(/[^a-z]/gi, '').length < 15) return;
+  jobs.push({ json: {
+    sceneIndex: i, kind: 'bg',
+    body: {
+      prompt: style.prefix + '. ' + scene + ', ' + style.suffix + ', ' + FRAME + ', ' + BG_FRAME + ', ' + safetyFor(scene),
+      image_size: { width: 1080, height: 1920 },
+      num_images: 1,
+      enable_safety_checker: true
+    }
+  } });
+});
+
 console.log('image jobs: ' + jobs.length + ' (' + p.category + ')');
 return jobs.length ? jobs : [{ json: { skip: true } }];

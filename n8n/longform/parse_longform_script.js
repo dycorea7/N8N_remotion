@@ -15,7 +15,7 @@ if (!parsed) throw new Error('Claude 롱폼 JSON 파싱 실패' + (stop === 'max
 
 const src = $('Build Longform Request').first().json;
 const subtitleLang = String(src.Language || 'Korean').trim().toLowerCase() === 'english' ? 'en' : 'ko';
-const maxImages = Number(src.maxImages) || 14;
+const maxImages = Number(src.maxImages) || 26;
 const s = v => String(v == null ? '' : v).replace(/["]/g, '”').trim();
 
 const chaptersIn = (Array.isArray(parsed.chapters) ? parsed.chapters : []).filter(c => c && Array.isArray(c.scenes) && c.scenes.length);
@@ -48,15 +48,20 @@ if (!CATEGORIES.includes(category)) category = isSermon ? 'bible' : 'other';
 const mood = MOODS.includes(parsed.mood) ? parsed.mood : 'calm_reflective';
 const styleFit = ['hud', 'classic', 'pop', 'either'].includes(String(parsed.style || '').trim().toLowerCase()) ? String(parsed.style).trim().toLowerCase() : 'either';
 
-// 이미지 장면: 개수 상한, 연속 금지, 프롬프트 너무 짧으면 headline
-let imageCount = 0, prevImage = false;
+// AI 그림: 이미지 장면 + 그래픽 장면 뒤 사진 배경(bg)을 합쳐 상한까지. 이미지 장면은 3개 연속 금지
+const promptOk = t => String(t || '').replace(/[^a-z]/gi, '').length >= 15;
+let imageCount = 0, bgCount = 0, run = 0;
 for (const x of scenes) {
   const v = x.visual;
-  if (v.type !== 'image') { prevImage = false; continue; }
-  const ok = String(v.prompt || '').replace(/[^a-z]/gi, '').length >= 15;
-  if (ok && !prevImage && imageCount < maxImages) { imageCount++; prevImage = true; continue; }
-  x.visual = { type: 'headline', text: s(v.text || x.narration.slice(0, 18)), highlight: v.highlight || [] };
-  prevImage = false;
+  if (v.type === 'image') {
+    if (promptOk(v.prompt) && run < 2 && imageCount + bgCount < maxImages) { imageCount++; run++; continue; }
+    x.visual = { type: 'headline', text: s(v.text || x.narration.slice(0, 18)), highlight: v.highlight || [] };
+  }
+  run = 0;
+  if (x.visual.bg) {
+    if (promptOk(x.visual.bg) && x.visual.type !== 'chapter' && imageCount + bgCount < maxImages) bgCount++;
+    else delete x.visual.bg;
+  }
 }
 if (isSermon) for (const x of scenes) if (x.visual.type === 'stat' || x.visual.type === 'chart') x.visual = { type: 'headline', text: x.narration.slice(0, 18), highlight: [] };
 // 마지막 장면만 outro
@@ -76,12 +81,12 @@ const tags = (Array.isArray(parsed.tags) ? parsed.tags : []).map(t => s(t).repla
 let tagStr = '';
 for (const t of tags) { if ((tagStr + ',' + t).length > 450) break; tagStr = tagStr ? tagStr + ',' + t : t; }
 
-console.log('chars: ' + len + ' | chapters: ' + chapters.length + ' | scenes: ' + scenes.length + ' | images: ' + imageCount + ' | ' + category + '/' + mood + ' | style ' + styleFit + (warnings.length ? ' | ' + warnings.join(' ') : ''));
+console.log('chars: ' + len + ' | chapters: ' + chapters.length + ' | scenes: ' + scenes.length + ' | images: ' + imageCount + ' + bg ' + bgCount + ' | ' + category + '/' + mood + ' | style ' + styleFit + (warnings.length ? ' | ' + warnings.join(' ') : ''));
 return [{ json: {
   title: s(parsed.title || src.Topic).slice(0, 100),
   description: s(parsed.description),
   hashtags, tagStr, script, scenes, chapters, thumbnail,
-  category, mood, styleFit, imageCount, format: isSermon ? 'sermon' : 'essay',
+  category, mood, styleFit, imageCount, bgCount, format: isSermon ? 'sermon' : 'essay',
   scriptLength: len, warnings,
   topic: src.Topic, language: src.Language || 'Korean', subtitleLang,
   shortVideoId: src.shortVideoId, shortViews: src.shortViews

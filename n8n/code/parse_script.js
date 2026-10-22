@@ -41,16 +41,24 @@ const mood = MOODS.includes(parsed.mood) ? parsed.mood : 'calm_reflective';
 // 영상 스타일 적합도 (hud / classic / pop / either). 실제 선택은 Build Render Job에서
 const styleFit = ['hud', 'classic', 'pop', 'either'].includes(String(parsed.style || '').trim().toLowerCase()) ? String(parsed.style).trim().toLowerCase() : 'either';
 
-// ── AI 이미지 장면: 꺼져 있거나 개수 초과, 프롬프트 없음 → 같은 키워드의 headline ──
+// ── AI 그림: 이미지 장면 + 그래픽 장면 뒤 사진 배경(bg)을 합쳐 상한까지 (앞 장면부터) ──
+//    이미지 장면이 넘치면 같은 키워드의 headline, 사진 배경이 넘치면 배경 없이
 const useImages = src.useImages !== false;
-const maxImages = Number(src.maxImages) || 3;
-let imageCount = 0;
+const maxImages = Number(src.maxImages) || 6;
+const promptOk = t => String(t || '').replace(/[^a-z]/gi, '').length >= 15;
+let imageCount = 0, bgCount = 0;
 for (const s of scenes) {
   const v = s.visual;
-  if (!v || v.type !== 'image') continue;
-  const promptOk = String(v.prompt || '').replace(/[^a-z]/gi, '').length >= 15;
-  if (useImages && promptOk && imageCount < maxImages) { imageCount++; continue; }
-  s.visual = { type: 'headline', text: String(v.text || s.narration.slice(0, 18)), highlight: v.highlight || [] };
+  if (!v) continue;
+  if (v.type === 'image') {
+    if (useImages && promptOk(v.prompt) && imageCount + bgCount < maxImages) { imageCount++; continue; }
+    s.visual = { type: 'headline', text: String(v.text || s.narration.slice(0, 18)), highlight: v.highlight || [] };
+    continue;
+  }
+  if (v.bg) {
+    if (useImages && promptOk(v.bg) && v.type !== 'chapter' && imageCount + bgCount < maxImages) bgCount++;
+    else delete v.bg;
+  }
 }
 
 // 설교에는 숫자 그래픽을 쓰지 않는다
@@ -62,12 +70,12 @@ if (format === 'sermon') {
 
 const hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];
 const types = scenes.map(s => (s.visual && s.visual.type) || '?');
-console.log('chars: ' + script.length + '/' + MAX_CHARS + ' | scenes: ' + scenes.length + ' [' + types.join(', ') + '] | ' + format + '/' + category + ' | mood: ' + mood + ' | style: ' + styleFit + ' | images: ' + imageCount);
+console.log('chars: ' + script.length + '/' + MAX_CHARS + ' | scenes: ' + scenes.length + ' [' + types.join(', ') + '] | ' + format + '/' + category + ' | mood: ' + mood + ' | style: ' + styleFit + ' | images: ' + imageCount + ' + bg ' + bgCount);
 
 return [{ json: {
   title: String(parsed.title || src.Topic).slice(0, 100),
   description: String(parsed.description || '') + '\n\n' + hashtags.join(' '),
   hashtags, script, scenes, sceneTypes: types.join(' → '),
-  format, category, mood, styleFit, imageCount,
+  format, category, mood, styleFit, imageCount, bgCount,
   topic: src.Topic, language: src.Language || 'Korean', subtitleLang, rowNumber: src.row_number
 } }];

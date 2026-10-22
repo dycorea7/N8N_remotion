@@ -1,5 +1,5 @@
 // ===== 설정 =====
-const MAX_IMAGES = 14;          // 영상 한 편 AI 이미지 장면 최대 개수 (+ 썸네일 1장)
+const MAX_IMAGES = 26;          // 영상 한 편 AI 그림 최대 개수: 이미지 장면 + 그래픽 뒤 사진 배경(bg) 합계 (+ 썸네일 1장)
 const TARGET_KO = [3400, 4000]; // 한국어 나레이션 글자 수 (공백 포함) ≈ 8~9.5분
 const TARGET_EN = [1350, 1600]; // 영어 단어 수
 // ================
@@ -35,7 +35,7 @@ Chapter titles: max 18 Korean characters / 6 English words, plain and searchable
 - Money / economy: financial literacy, not advice. Never name a stock, coin, fund or product to buy, never promise returns or predict markets. Use standard checkable math (compound interest, rule of 72, inflation).
 
 === SCENES (motion design) ===
-Split each chapter into 8 to 14 scenes. Each scene = { "narration": the exact words spoken (one or two sentences, about 40 to 80 Korean characters), "visual": what is on screen }. Narration is spoken text only: no stage directions, emoji or brackets. Joining all narrations in order must give the complete script.
+Split each chapter into 10 to 16 scenes. Each scene = { "narration": the exact words spoken (one or two sentences, about 40 to 80 Korean characters), "visual": what is on screen }. Narration is spoken text only: no stage directions, emoji or brackets. Joining all narrations in order must give the complete script.
 The narration already appears as captions, so on-screen text must NOT repeat it: pull out the key phrase, number or contrast.
 
 Visual types (use ONLY these):
@@ -52,10 +52,12 @@ Visual types (use ONLY these):
 - checklist: {"type":"checklist","title":"max 16 chars","items":["2 to 4 concrete actions, max 12 Korean chars each"]}  - things the viewer should do; each gets ticked as it is spoken.
 - iconGrid: {"type":"iconGrid","title":"max 16 chars","items":[{"emoji":"one common emoji","label":"max 8 Korean chars"}]}  - 2 to 4 parallel ideas side by side.
 (Emoji are drawn as clean line icons, so pick a common, literal emoji: 💰 ⏰ 🧠 ❤️ 📖 🙏 🎯 💡 ✅ ⚠️ 🌙 🏃 🍎 🤝 📈.)
-- image: {"type":"image","prompt":"English image prompt, under 30 words","text":"optional overlay keyword, max 12 Korean chars","highlight":["word from text"]} - a full-screen 16:9 AI illustration. Use for up to ${MAX_IMAGES} scenes spread across all chapters (a concrete moment, place or object), never two in a row, never for numbers or lists. Prompt rules: describe only the CONTENT (style is added automatically); give time of day, weather and light; at most one person, written as an adult figure with no age, gender, nationality or ethnicity; never children; modest clothing; never a real identifiable person; no text or logos; no religious icons of specific figures.
+- image: {"type":"image","prompt":"English image prompt, under 30 words","text":"optional overlay keyword, max 12 Korean chars","highlight":["word from text"]} - a full-screen 16:9 AI illustration. Use for about 12 to 16 scenes spread across all chapters (a concrete moment, place or object), never three in a row, never for numbers or lists. Prompt rules: describe only the CONTENT (style is added automatically); give time of day, weather and light; at most one person, written as an adult figure with no age, gender, nationality or ethnicity; never children; modest clothing; never a real identifiable person; no text or logos; no religious icons of specific figures.
+- bg (optional field on ANY non-image, non-chapter scene): "bg":"English image prompt, under 30 words" puts a 16:9 AI photo behind that scene's motion graphic, so the picture and the graphic appear together. Same prompt rules as image. Use it on graphic scenes whose idea has a concrete place or object.
 - outro: {"type":"outro","text":"closing line, max 16 chars","highlight":["word"],"cta":"short subscribe call"} - ONLY the very last scene.
 
-Design rules: never the same type twice in a row (except image never twice in a row either). Each body chapter uses at least 3 different types; use timeline, checklist and iconGrid where they fit instead of repeating list or headline. Numbers on screen must exactly match the narration; never invent numbers. SERMON: no stat or chart. highlight words must literally appear in that scene's text. Never use the straight double-quote character inside any value; use “ ” or 「 」.
+PACING: the video is a flow of pictures with motion graphics woven in between. About half of the scenes show a picture (an image scene, or a graphic with bg); never more than two scenes in a row without a picture. At most ${MAX_IMAGES} pictures in total (image scenes + bg fields together).
+Design rules: never the same type twice in a row except image. Each body chapter uses at least 3 different types; use timeline, checklist and iconGrid where they fit instead of repeating list or headline. Numbers on screen must exactly match the narration; never invent numbers. SERMON: no stat or chart. highlight words must literally appear in that scene's text. Never use the straight double-quote character inside any value; use “ ” or 「 」.
 
 === SEO & THUMBNAIL ===
 title: under 60 characters, the searchable keyword first, a curiosity gap, honest. Include the scripture reference for sermons. Must differ from the Short's title.

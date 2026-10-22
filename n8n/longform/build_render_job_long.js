@@ -40,10 +40,11 @@ reqs.forEach((r, k) => {
   const out = res[k] && res[k].json;
   const url = out && out.images && out.images[0] && out.images[0].url;
   if (idx === -1) { if (url) thumbSrc = url; else failures.push('썸네일 이미지 실패'); return; }
-  if (url && scenes[idx]) { scenes[idx].visual.src = url; imagesOk++; }
+  // kind 'bg' = 그래픽 장면 뒤 사진 배경 → visual.bgSrc / 그 밖 = 이미지 장면 → visual.src
+  if (url && scenes[idx]) { if (r.json.kind === 'bg') scenes[idx].visual.bgSrc = url; else scenes[idx].visual.src = url; imagesOk++; }
   else { imagesFailed++; failures.push('장면 ' + (idx + 1) + ': ' + JSON.stringify(out && (out.error || out.detail) || 'no image').slice(0, 160)); }
 });
-for (const s of scenes) if (s.visual) delete s.visual.prompt; // 렌더러에는 필요 없음
+for (const s of scenes) if (s.visual) { delete s.visual.prompt; delete s.visual.bg; } // 렌더러에는 필요 없음
 
 // ── 배경음악: 드라이브 라이브러리에서 무드에 맞는 곡 하나 ──
 let musicUrl = '', musicName = 'none';
