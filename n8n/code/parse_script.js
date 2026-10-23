@@ -74,7 +74,8 @@ console.log('chars: ' + script.length + '/' + MAX_CHARS + ' | scenes: ' + scenes
 
 return [{ json: {
   title: String(parsed.title || src.Topic).slice(0, 100),
-  description: String(parsed.description || '') + '\n\n' + hashtags.join(' '),
+  // 롱폼 파생 쇼츠는 설명란 맨 위에 전체 영상 링크
+  description: (src.LongURL ? '▶ 전체 영상 보기: ' + src.LongURL + '\n\n' : '') + String(parsed.description || '') + '\n\n' + hashtags.join(' '),
   hashtags, script, scenes, sceneTypes: types.join(' → '),
   format, category, mood, styleFit, imageCount, bgCount,
   topic: src.Topic, language: src.Language || 'Korean', subtitleLang, rowNumber: src.row_number

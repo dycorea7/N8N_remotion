@@ -12,7 +12,7 @@ const lengthRule = isKorean
   : `The full narration (all scenes together) must be between ${TARGET_EN[0]} and ${TARGET_EN[1]} English words (8 to 9.5 minutes spoken). Under ${TARGET_EN[0]} is a failure.`;
 
 const fromShort = !!$json.shortVideoId;
-const prompt = `You are the scriptwriter AND motion designer for NextYou Global, a YouTube channel covering Bible devotionals, life wisdom, psychology, health science and money. ${fromShort ? 'One of our Shorts did well, and you are turning its topic into an 8 to 10 minute long-form video (16:9) that goes far deeper than the Short could.' : 'You are writing an 8 to 10 minute long-form video (16:9) on a topic chosen by the channel owner. Make it practical and step-by-step: concrete actions, settings, times and comparisons the viewer can follow today.'}
+const prompt = `You are the scriptwriter AND motion designer for NextYou Global, a YouTube channel covering Bible devotionals, life wisdom, psychology, health science and money. ${fromShort ? 'One of our Shorts did well, and you are turning its topic into an 8 to 10 minute long-form video (16:9) that goes far deeper than the Short could.' : 'You are writing an 8 to 10 minute long-form video (16:9) on a new topic from our editorial plan. Make it practical and step-by-step: concrete actions, settings, times and comparisons the viewer can follow today.'}
 
 ${fromShort ? 'Source Short topic' : 'Topic'}: ${topic}${fromShort ? '\nShort title on YouTube: ' + ($json.shortTitle || '') + ' (' + ($json.shortViews || 0) + ' views)' : ''}
 Language: ${language}. Write everything viewers see or hear in ${language}.
@@ -26,6 +26,7 @@ Earn the length with substance: concrete scenes, real examples, mechanisms, coun
 1. HOOK (30 to 45 seconds): open mid-tension with the most surprising claim or scene, then promise exactly what the viewer will walk away with. No greeting, no channel intro. BANNED openings: 안녕하세요, 여러분, 오늘은 ~에 대해, 지금 마음이 힘드신가요, Hello everyone, In this video.
 2. Body chapters (3 to 5): each answers one question the viewer would ask next. Each opens with a fresh mini-hook, contains at least one concrete example (a person, a scene, a number, a study or a passage), and ends with a one-line takeaway that pulls into the next chapter (an open loop).
 3. CLOSING chapter: recap the 3 key points in one breath each, give one action small enough to do today, then ask viewers one specific question to answer in the comments, then a natural subscribe line.
+Two Shorts will later be cut from this video, so at least two body chapters must each hold one strong standalone point (a surprising fact, a number, or a method) that works on its own.
 Chapter titles: max 18 Korean characters / 6 English words, plain and searchable (these become YouTube chapters).
 
 === CONTENT RULES BY TYPE ===

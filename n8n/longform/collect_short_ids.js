@@ -17,6 +17,7 @@ rows.filter(function (r) { return String(r.Status || '').trim() === 'uploaded'; 
     cands.push({ id: id, topic: r.Topic, row: r.row_number });
   });
 const pick = cands.slice(0, 50);
-if (!pick.length) throw new Error('롱폼으로 만들 쇼츠가 없습니다 — 업로드된 한국어 쇼츠가 모두 이미 롱폼으로 만들어졌거나 VideoURL이 비어 있습니다');
+// 후보가 없어도 멈추지 않는다 — 롱폼 주제는 LongformTopics 탭이 먼저다 (쇼츠는 그 탭이 비었을 때만 쓴다)
+if (!pick.length) { console.log('롱폼으로 만들 쇼츠 후보 없음'); return [{ json: { ids: 'none', candidates: [] } }]; }
 console.log('후보 쇼츠 ' + pick.length + '개 (이미 롱폼 ' + used.size + '개 제외)');
 return [{ json: { ids: pick.map(function (c) { return c.id; }).join(','), candidates: pick } }];

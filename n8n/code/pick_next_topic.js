@@ -4,6 +4,7 @@
 //  - 영어 제목 제외
 //  - 최근 업로드 2개와 같은 분야는 감점 → 분야가 번갈아 나온다
 //  - 짧은 훅 제목 가산, 「~할수록 오히려 / 역설」 형태 감점
+//  - 롱폼 파생 쇼츠(Source=longform)는 크게 가산 → 롱폼 업로드 뒤 며칠 안에 나간다
 //  - 점수가 비슷하면 최근에 만든 주제(아래쪽 행) 우선
 // ===== 설정 =====
 // 'skip': 성경 주제는 Bible Shorts가 만든다 / 'first': 성경 주제부터 / 'mix': 분야를 번갈아
@@ -49,6 +50,8 @@ const scored = pending.map(function (r) {
   else if (BIBLE_MODE === 'first' && pillar === 'bible') { s += 500; why.push('성경 우선'); }
   else if (pillar === recent[0]) { s -= 40; why.push('직전과 같은 분야'); }
   else if (pillar === recent[1]) { s -= 20; why.push('전전과 같은 분야'); }
+  // 롱폼에서 파생된 쇼츠는 롱폼이 올라간 직후에 나가도록 먼저 (분야 감점보다 크게)
+  if (String(r.Source || '').trim() === 'longform') { s += 70; why.push('롱폼 파생'); }
   if (h.length <= 28) { s += 20; why.push('짧은 훅'); }
   else if (h.length <= 40) { s += 5; }
   else if (h.length > 50) { s -= 15; why.push('제목 김'); }

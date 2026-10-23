@@ -51,11 +51,15 @@ const IMAGE_TYPE = USE_AI_IMAGES ? `
   Image prompt rules: describe only the CONTENT of the scene (the art style is added automatically per category); always give time of day, weather and light; at most one person, written as an adult figure with no age, gender, nationality or ethnicity; never children or minors; ordinary modest clothing, nothing suggestive; never a real identifiable person (when the script names someone, show their world instead - a workshop, a desk, a road); no text, letters or logos in the image; no religious icons of specific figures. Consecutive image scenes must differ in place and distance.\n- bg (optional field on ANY non-image scene: headline, stat, chart, list, checklist, compare, timeline, icon, iconGrid, quote, scripture, outro): "bg":"English image prompt, under 30 words" puts an AI photo behind that scene's motion graphic, so the viewer sees the picture and the graphic together (the number over the kitchen table, the checklist over the morning street). Same prompt rules as image. Use it on 1 to 3 graphic scenes whose idea has a concrete place or object.` : '';
 const IMAGE_RULE = USE_AI_IMAGES ? `\n- PACING: the video is a flow of pictures with motion graphics woven in between. About half of the scenes show a picture (an image scene, or a graphic with bg); never more than two scenes in a row without a picture; never three image scenes in a row.\n- At most ${MAX_IMAGES} pictures in total (image scenes + bg fields together).` : '';
 
+// 롱폼에서 파생된 쇼츠: 롱폼 대본에서 뽑은 핵심(Brief)을 근거로 쓰고, 끝에서 전체 영상으로 이끈다
+const brief = String($json.Brief || '').trim();
+const longUrl = String($json.LongURL || '').trim();
+const SPINOFF = brief ? `\n=== SOURCE: THIS SHORT IS CUT FROM OUR LONG-FORM VIDEO ===\nKey points from the long-form script (use these as the factual backbone; do not contradict them, and add nothing you are unsure of):\n${brief}\nThe Short must stand on its own with its own hook. In the last scene, invite the viewer to the full video in one short natural line (Korean e.g. 전체 영상에서 나머지 방법까지 확인하세요). The link is added to the description automatically - never write a URL.\n` : '';
 const prompt = `You are the scriptwriter AND motion designer for NextYou Global, a YouTube Shorts channel covering Bible devotionals, motivation, wealth mindset and self-improvement.
 The video is animated motion graphics (kinetic type, counters, charts, cards) over an animated gradient${USE_AI_IMAGES ? ', plus a few full-screen AI illustrations' : ''}, with word-by-word narration captions in the lower third. You write the narration and design every scene.
 
 Topic: ${topic}
-Language: ${language}
+Language: ${language}${SPINOFF}
 Write everything viewers see or hear - narration, on-screen text, title, description, hashtags - in ${language}.
 
 === LENGTH (hard rule) ===
@@ -129,4 +133,4 @@ Respond ONLY with valid JSON, no markdown fences:
 {"title":"...","description":"...","hashtags":["#tag"],"format":"sermon or essay","category":"bible|quote|wealth|health|other","mood":"...","style":"hud|classic|pop|keynote|either","scenes":[{"narration":"...","visual":{"type":"headline","text":"...","highlight":["..."],"emoji":"..."}}]}`;
 
 console.log('seed ' + seed + ' | sermon: ' + sermonShape.split(' - ')[0] + ' | essay: ' + essayFormat.split(' - ')[0]);
-return [{ json: { body: { model: 'claude-sonnet-4-6', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] }, Topic: topic, Language: language, row_number: $json.row_number, useImages: USE_AI_IMAGES, maxImages: MAX_IMAGES } }];
+return [{ json: { body: { model: 'claude-sonnet-4-6', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] }, Topic: topic, Language: language, row_number: $json.row_number, useImages: USE_AI_IMAGES, maxImages: MAX_IMAGES, LongURL: longUrl, Source: String($json.Source || '') } }];

@@ -56,6 +56,25 @@ for (const t of parsed.topics) {
 if (!accepted.length) throw new Error('생성된 ' + parsed.topics.length + '개가 모두 제외되었습니다 — 재시도하세요. 제외: ' + rejected.join(' | '));
 console.log('accepted ' + accepted.length + ', rejected ' + rejected.length + ' | 훅 유형 ' + JSON.stringify(shapes));
 if (rejected.length) console.log('rejected: ' + rejected.join(' | '));
+// ── 롱폼 주제: LongformTopics 탭에 넣을 행 (첫 항목에 붙여 두고, 텔레그램 뒤의 Longform Rows 노드가 펼친다) ──
+let longExisting = [];
+try { longExisting = $('Read Longform Topics').all().map(function (i) { return i.json.Topic; }).filter(Boolean); } catch (e) { /* 탭 없음 */ }
+const longAccepted = [], longRejected = [];
+const LONG_PILLARS = ['money', 'wisdom', 'health', 'psychology'];
+for (const t of (Array.isArray(parsed.longform) ? parsed.longform : [])) {
+  const title = String((t && t.title) || '').replace(/["]/g, '”').replace(/\s*—\s*/g, ' ').trim();
+  const angle = String((t && t.angle) || '').replace(/["]/g, '”').replace(/\s*[—|]\s*/g, ', ').trim().slice(0, 80);
+  const pillar = LONG_PILLARS.includes(String(t && t.pillar)) ? String(t.pillar) : 'wisdom';
+  if (!title || !/[가-힣]/.test(title)) { longRejected.push((title || '(빈 제목)') + ' (한글 없음)'); continue; }
+  const pool = longExisting.concat(existing, longAccepted.map(function (a) { return a.Topic; }));
+  const dup = pool.some(function (old) { return normalize(old) === normalize(title) || similarity(head(old), title) >= 0.6 || similarity(old, title + ' ' + angle) >= 0.7; });
+  if (dup) { longRejected.push(title + ' (기존 주제와 유사)'); continue; }
+  longAccepted.push({ Topic: title + (angle ? ' — ' + angle : ''), Pillar: pillar, Status: 'pending', Source: 'generated', Added: $now.toFormat('yyyy-MM-dd'), LongTitle: '', LongURL: '' });
+  console.log('✔ [롱폼/' + pillar + '] ' + title + (angle ? ' — ' + angle : ''));
+}
+if (longRejected.length) console.log('롱폼 제외: ' + longRejected.join(' | '));
 // 제외 목록은 첫 항목에 붙여 텔레그램 요약에서 쓴다
 accepted[0].Rejected = rejected;
+accepted[0].Longform = longAccepted;
+accepted[0].LongRejected = longRejected;
 return accepted.map(function (json) { return { json: json }; });

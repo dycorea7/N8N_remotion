@@ -13,6 +13,8 @@ if (mixText) msg += '배정: ' + esc(mixText) + '\n';
 for (const k of Object.keys(groups)) {
   msg += '\n<b>' + esc(NAMES[k] || k) + '</b> (' + groups[k].length + ')\n' + groups[k].map(x => '• ' + esc(x)).join('\n') + '\n';
 }
+const longs = (items[0] && items[0].Longform) || [];
+if (longs.length) msg += '\n<b>🎬 롱폼 주제 ' + longs.length + '개</b> (화·금, 롱폼마다 쇼츠 2편 파생)\n' + longs.map(x => '• [' + esc(NAMES[x.Pillar] || x.Pillar) + '] ' + esc(x.Topic)).join('\n') + '\n';
 if (rejected.length) msg += '\n<b>제외 ' + rejected.length + '개</b>\n' + rejected.slice(0, 10).map(x => '– ' + esc(x)).join('\n') + (rejected.length > 10 ? '\n…' : '') + '\n';
 msg += '\n시트: https://docs.google.com/spreadsheets/d/1_RFLFLkxolbaSVOw-tWf8SuBKE0FV9n6dfqUrFoOA2k';
 // 텔레그램 한 메시지 최대 4096자

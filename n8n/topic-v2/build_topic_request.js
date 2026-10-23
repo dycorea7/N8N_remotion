@@ -1,10 +1,13 @@
 // ===== 설정 =====
-// 한 번에 만드는 주제 수. Bible Shorts(하루 1편)와 Motion Shorts v2(하루 1편)가 매일 하나씩 쓰므로 주 14편.
-const TOTAL = 14;
-// 기둥별 최소 편수. 남는 편수는 이번 주 한국어 쇼츠 수요가 큰 기둥에 배정한다.
+// 한 번에 만드는 쇼츠 주제 수. Bible Shorts(하루 1편) 7편 + Motion Shorts 3편.
+// Motion Shorts의 나머지 4편(주)은 롱폼(화·금)마다 2편씩 롱폼에서 파생된 쇼츠 주제로 채워진다.
+const TOTAL = 10;
+// 기둥별 최소 편수. 남는 편수는 이번 주 한국어 쇼츠 수요가 큰 기둥(성경 제외)에 배정한다.
 // 성경은 Bible Shorts가 매일 쓰므로 한 주 치(7편)를 지킨다.
-// 경제·재테크는 매주 최소 3편.
-const MIN_PER_PILLAR = { bible: 7, wisdom: 1, health: 1, psychology: 1, money: 3 };
+// 경제·재테크: 여기서 1편 + 경제 롱폼 1편의 파생 쇼츠 2편 = 주 3편 이상.
+const MIN_PER_PILLAR = { bible: 7, wisdom: 0, health: 0, psychology: 0, money: 1 };
+// 롱폼(8~10분) 주제 수 — 화·금 롱폼 2편. 하나는 경제, 하나는 지혜·건강·심리 중에서.
+const LONG_TOTAL = 2;
 const PILLAR_DESC = {
   bible: 'Bible / faith reflection. Topic is a Korean theme, then a vertical bar, then the scripture reference: 두려움을 이기는 믿음 | 이사야 41:10',
   wisdom: 'Life wisdom: philosophy, 인간관계, 처세, aging well. This is the biggest Shorts market in Korea.',
@@ -16,6 +19,9 @@ const PILLAR_DESC = {
 
 const existingList = $('Read Existing Topics').all().map(function (i) { return i.json.Topic; }).filter(Boolean);
 const existing = existingList.slice(-150).join('\n') || '(none yet)';
+let longList = [];
+try { longList = $('Read Longform Topics').all().map(function (i) { return i.json.Topic; }).filter(Boolean); } catch (e) { /* 탭 없음 */ }
+const existingLong = longList.slice(-60).join('\n') || '(none yet)';
 
 // ── 수요 기반 기둥 배정 ──
 let demandInfo = { demand: {}, report: '' };
@@ -23,7 +29,7 @@ try { demandInfo = $('Shorts Demand Analysis').first().json; } catch (e) { conso
 const demand = demandInfo.demand || {};
 const mix = Object.assign({}, MIN_PER_PILLAR);
 let left = TOTAL - Object.keys(mix).reduce(function (a, k) { return a + mix[k]; }, 0);
-const ranked = Object.keys(mix).sort(function (a, b) { return (demand[b] || 0) - (demand[a] || 0); });
+const ranked = Object.keys(mix).filter(function (k) { return k !== 'bible'; }).sort(function (a, b) { return (demand[b] || 0) - (demand[a] || 0); });
 if (left > 0 && ranked.length) {
   const first = ranked[0], second = ranked[1];
   // 1위 수요가 2위의 3배 이상이면 남는 편수를 1위에 몰아준다
@@ -59,11 +65,11 @@ try {
   }
 } catch (e) { console.log('Insights 탭을 읽지 못함'); }
 
-const pillarLines = Object.keys(mix).map(function (k) { return '- ' + k + ' x' + mix[k] + ': ' + PILLAR_DESC[k]; }).join('\n');
+const pillarLines = Object.keys(mix).filter(function (k) { return mix[k] > 0; }).map(function (k) { return '- ' + k + ' x' + mix[k] + ': ' + PILLAR_DESC[k]; }).join('\n');
 
 const prompt = `You are the content strategist for NextYou Global, a Korean YouTube Shorts channel (faith, life wisdom, health science, psychology, money and the economy). The goal of this batch is VIEWS: pick subjects Korean Shorts viewers are already watching in large numbers, and frame each so it stops a scrolling thumb.
 
-Generate exactly ${TOTAL} new Shorts topics, all in Korean, with exactly these pillar counts:
+Generate exactly ${TOTAL} new Shorts topics and ${LONG_TOTAL} long-form topics (section below), all in Korean. Shorts pillar counts (exactly):
 ${pillarLines}
 
 === MARKET DATA - Korean YouTube Shorts from the last 3 weeks ===
@@ -90,18 +96,27 @@ ${feedback}
 - MUST NOT duplicate or closely resemble any existing topic:
 ${existing}
 
+=== LONG-FORM TOPICS (8 to 10 minute videos) ===
+Also generate exactly ${LONG_TOTAL} long-form topics: one money pillar, and one from wisdom, health or psychology. Each long-form video is then cut into two Shorts, so it must contain at least two strong standalone points.
+- Use the same market data: pick a subject Korean viewers already watch, then go deeper than a Short can.
+- Practical and step-by-step: a method, a routine, a decision, a comparison or a mechanism the viewer can apply - concrete actions, times, numbers and settings.
+- long title: 15 to 32 Korean characters, the searchable keyword first, honest. angle: max 60 characters on what the video covers and its structure (e.g. 3단계, 시간표, 체크리스트).
+- Same honesty rules as the Shorts (health: general and evidence-based; money: literacy, not advice).
+- Must not duplicate or closely resemble any existing long-form topic or Shorts topic:
+${existingLong}
+
 === OUTPUT (JSON only) ===
 The first character must be the opening brace and the last the closing brace. No prose, no code fences, no straight double-quote characters inside strings.
 shape is one of: number_list, age_target, warning, reason, people, paradox, question, story.
 evidence names the market-data title or pattern that this topic leans on (short).
-{"topics": [{"pillar": "bible|wisdom|health|psychology|money", "title": "...", "angle": "...", "reference": "", "shape": "...", "evidence": "..."}]}`;
+{"topics": [{"pillar": "bible|wisdom|health|psychology|money", "title": "...", "angle": "...", "reference": "", "shape": "...", "evidence": "..."}], "longform": [{"pillar": "money|wisdom|health|psychology", "title": "...", "angle": "...", "evidence": "..."}]}`;
 
 console.log('수요 ' + JSON.stringify(demand) + ' → 배정 ' + mixText + ' | 사상가 ' + thinkers.join(', '));
 return [{ json: {
   mix: mix,
   body: {
     model: 'claude-sonnet-4-6',
-    max_tokens: 6000,
+    max_tokens: 8000,
     temperature: 1,
     system: 'You are a JSON-only API. You return a single valid JSON object and nothing else.',
     messages: [{ role: 'user', content: prompt }]
