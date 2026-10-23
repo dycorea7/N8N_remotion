@@ -37,6 +37,8 @@ const extOf = (url, fallback) => { const m = String(url).split('?')[0].match(/\.
 
 const t0 = Date.now();
 const job = /^https?:\/\//.test(jobArg) ? JSON.parse((await fetchBuf(jobArg)).toString('utf8')) : JSON.parse(fs.readFileSync(jobArg, 'utf8'));
+// 수동 재렌더용: 워크플로 입력 style이 있으면 job.json의 스타일을 덮어쓴다
+if (process.env.STYLE_OVERRIDE) job.style = String(process.env.STYLE_OVERRIDE).trim();
 const id = String(job.job_id || 'job').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || 'job';
 const rel = `job/${id}`;
 const dir = path.join(__dirname, 'public', rel);
