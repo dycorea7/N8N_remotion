@@ -11,10 +11,10 @@ const lengthRule = isKorean
   ? `The full narration (all scenes together) must be between ${TARGET_KO[0]} and ${TARGET_KO[1]} Korean characters including spaces (8 to 9.5 minutes spoken). This is a hard rule: count as you go. Under ${TARGET_KO[0]} is a failure.`
   : `The full narration (all scenes together) must be between ${TARGET_EN[0]} and ${TARGET_EN[1]} English words (8 to 9.5 minutes spoken). Under ${TARGET_EN[0]} is a failure.`;
 
-const prompt = `You are the scriptwriter AND motion designer for NextYou Global, a YouTube channel covering Bible devotionals, life wisdom, psychology, health science and money. One of our Shorts did well, and you are turning its topic into an 8 to 10 minute long-form video (16:9) that goes far deeper than the Short could.
+const fromShort = !!$json.shortVideoId;
+const prompt = `You are the scriptwriter AND motion designer for NextYou Global, a YouTube channel covering Bible devotionals, life wisdom, psychology, health science and money. ${fromShort ? 'One of our Shorts did well, and you are turning its topic into an 8 to 10 minute long-form video (16:9) that goes far deeper than the Short could.' : 'You are writing an 8 to 10 minute long-form video (16:9) on a topic chosen by the channel owner. Make it practical and step-by-step: concrete actions, settings, times and comparisons the viewer can follow today.'}
 
-Source Short topic: ${topic}
-Short title on YouTube: ${$json.shortTitle || ''} (${$json.shortViews || 0} views)
+${fromShort ? 'Source Short topic' : 'Topic'}: ${topic}${fromShort ? '\nShort title on YouTube: ' + ($json.shortTitle || '') + ' (' + ($json.shortViews || 0) + ' views)' : ''}
 Language: ${language}. Write everything viewers see or hear in ${language}.
 
 === LENGTH (hard rule) ===
@@ -60,7 +60,7 @@ PACING: the video is a flow of pictures with motion graphics woven in between. A
 Design rules: never the same type twice in a row except image. Each body chapter uses at least 3 different types; use timeline, checklist and iconGrid where they fit instead of repeating list or headline. Numbers on screen must exactly match the narration; never invent numbers. SERMON: no stat or chart. highlight words must literally appear in that scene's text. Never use the straight double-quote character inside any value; use “ ” or 「 」.
 
 === SEO & THUMBNAIL ===
-title: under 60 characters, the searchable keyword first, a curiosity gap, honest. Include the scripture reference for sermons. Must differ from the Short's title.
+title: under 60 characters, the searchable keyword first, a curiosity gap, honest. Include the scripture reference for sermons.${fromShort ? " Must differ from the Short's title." : ''}
 description: 3 to 5 short lines on what the video answers and who it is for (no timestamps - they are added automatically), then the channel line (Korean: 📌 Next You Global 채널은 성경 말씀, 지혜, 심리, 건강, 돈 이야기를 깊이 있게 전합니다.) and a subscribe line (👉 구독 & 좋아요로 함께 성장해요!).
 tags: 10 to 15 search tags without #, specific first.
 hashtags: exactly 3, the last is #NextYouGlobal.
