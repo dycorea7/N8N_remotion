@@ -46,7 +46,7 @@ const isSermon = /아멘|Amen/.test(script.slice(-400)) || String(parsed.categor
 let category = String(parsed.category || '').trim().toLowerCase();
 if (!CATEGORIES.includes(category)) category = isSermon ? 'bible' : 'other';
 const mood = MOODS.includes(parsed.mood) ? parsed.mood : 'calm_reflective';
-const styleFit = ['hud', 'classic', 'pop', 'keynote', 'either'].includes(String(parsed.style || '').trim().toLowerCase()) ? String(parsed.style).trim().toLowerCase() : 'either';
+const styleFit = ['hud', 'classic', 'pop', 'keynote', 'editorial', 'either'].includes(String(parsed.style || '').trim().toLowerCase()) ? String(parsed.style).trim().toLowerCase() : 'either';
 
 // AI 그림: 이미지 장면 + 그래픽 장면 뒤 사진 배경(bg)을 합쳐 상한까지. 이미지 장면은 3개 연속 금지
 const promptOk = t => String(t || '').replace(/[^a-z]/gi, '').length >= 15;

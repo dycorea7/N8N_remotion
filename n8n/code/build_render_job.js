@@ -5,14 +5,15 @@ const GITHUB_BRANCH = 'main';
 const MUSIC_VOLUME = 0.16;
 // 영상 스타일: 'classic' = 기존 카드형 / 'glyph' = 글자로 그린 이미지·글자 바닥·네온 타이포 (참고 영상 스타일)
 // 'hud' = 에디토리얼 HUD (추적 상자·태그 카드·플랩 숫자) / 'pop' = 원색 블록·초대형 타이포·도형 모핑 / 'keynote' = 애플 키노트풍 (오프화이트·검은 UI·리퀴드 글래스·커서)
+// 'editorial' = 다큐 설명 영상풍 종이 콜라주 (크림 종이·큰 빨간 원·테이프 붙인 사진·빨간 마커·스톱모션)
 const STYLE_BY_CATEGORY = { wealth: 'glyph' };
 // ================
 
 // 영상 스타일
 //  - 카테고리 고정: STYLE_BY_CATEGORY (경제 = glyph)
 //  - 설교·성경: 항상 classic
-//  - 나머지: Claude가 주제에 맞다고 고른 스타일(hud / classic / pop / keynote). 'either'면 네 가지를 날마다 돌아가며 쓴다
-const ROTATION = ['classic', 'hud', 'pop', 'keynote'];
+//  - 나머지: Claude가 주제에 맞다고 고른 스타일(hud / classic / pop / keynote / editorial). 'either'면 다섯 가지를 날마다 돌아가며 쓴다
+const ROTATION = ['classic', 'hud', 'pop', 'keynote', 'editorial'];
 function pickStyle(p) {
   if (STYLE_BY_CATEGORY[p.category]) return STYLE_BY_CATEGORY[p.category];
   if (p.format === 'sermon' || p.category === 'bible') return 'classic';

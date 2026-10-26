@@ -17,6 +17,8 @@ import { PopCaptions, PopChrome, PopSceneView, blockOf } from './pop/scenes';
 import { FONT_LOADS as POP_FONTS, POP_THEME, isLight } from './pop/util';
 import { resolveSrc } from './assets';
 import { KeynoteShort } from './keynote/Keynote';
+import { EditorialCaptions, EditorialChrome, EditorialSceneView } from './editorial/scenes';
+import { ED_THEME, FONT_LOADS as ED_FONTS } from './editorial/util';
 
 loadFonts();
 
@@ -31,17 +33,18 @@ export const Short: React.FC<ShortProps> = (props) => {
   const glyph = props.style === 'glyph';
   const hud = props.style === 'hud';
   const pop = props.style === 'pop';
-  const theme = pop ? POP_THEME : hud ? HUD_THEME : glyph ? glyphThemeFor(props.category) : themeFor(props.category);
-  useState(() => { if (glyph) loadTextFonts(FONT_LOADS, allText(props)); if (hud) loadTextFonts(HUD_FONTS, allText(props)); if (pop) loadTextFonts(POP_FONTS, allText(props)); return 0; });
+  const ed = props.style === 'editorial';
+  const theme = ed ? ED_THEME : pop ? POP_THEME : hud ? HUD_THEME : glyph ? glyphThemeFor(props.category) : themeFor(props.category);
+  useState(() => { if (glyph) loadTextFonts(FONT_LOADS, allText(props)); if (hud) loadTextFonts(HUD_FONTS, allText(props)); if (pop) loadTextFonts(POP_FONTS, allText(props)); if (ed) loadTextFonts(ED_FONTS, allText(props)); return 0; });
   const ticker = React.useMemo(() => hud ? props.scenes.map(s => { const v: any = s.visual; return String(v.text || v.title || v.label || '').trim(); }).filter(Boolean).map(x => x.slice(0, 24)) : [], [hud, props.scenes]);
   const floorWords = React.useMemo(() => glyph ? Array.from(new Set(props.scenes.flatMap(s => s.narration.split(/\s+/)).map(w => w.replace(/[^\p{L}\p{N}]/gu, '')).filter(w => w.length >= 2))).slice(0, 120) : [], [glyph, props.scenes]);
-  const View = pop ? PopSceneView : hud ? HudSceneView : glyph ? GlyphSceneView : SceneView;
+  const View = ed ? EditorialSceneView : pop ? PopSceneView : hud ? HudSceneView : glyph ? GlyphSceneView : SceneView;
   const t = frame / fps;
   const sceneIndex = Math.max(0, props.scenes.findIndex(s => t >= s.start && t < s.end));
   const musicVol = props.musicVolume ?? 0.16;
   return (
     <AbsoluteFill style={{ backgroundColor: theme.bg1 }}>
-      {hud ? <Backdrop /> : glyph ? <GlyphFloor theme={theme as any} words={floorWords} sceneIndex={sceneIndex} /> : <Background theme={theme} sceneIndex={sceneIndex} />}
+      {ed ? <AbsoluteFill style={{ background: theme.bg1 }} /> : hud ? <Backdrop /> : glyph ? <GlyphFloor theme={theme as any} words={floorWords} sceneIndex={sceneIndex} /> : <Background theme={theme} sceneIndex={sceneIndex} />}
       {props.scenes.map((s, i) => {
         const from = Math.round(s.start * fps);
         const dur = Math.max(1, Math.round(s.end * fps) - from);
@@ -57,10 +60,11 @@ export const Short: React.FC<ShortProps> = (props) => {
       {hud && <HudFilm dark={props.scenes[sceneIndex]?.visual.type === 'image'} />}
       {hud && <Chrome dark={props.scenes[sceneIndex]?.visual.type === 'image'} sceneIndex={sceneIndex} sceneCount={props.scenes.length} ticker={ticker} />}
       {pop && props.scenes[sceneIndex] && <PopChrome type={props.scenes[sceneIndex].visual.type} index={sceneIndex} light={isLight(blockOf(props.scenes[sceneIndex].visual.type, sceneIndex)[0])} />}
-      {pop ? <PopCaptions captions={props.captions} lang={props.lang} /> : hud ? <HudCaptions captions={props.captions} lang={props.lang} /> : <Captions captions={props.captions} theme={theme} lang={props.lang} />}
-      {!hud && !pop && landscape && props.chapters && props.chapters.length > 1 && <ChapterLabel chapters={props.chapters} t={t} theme={theme} />}
+      {ed && <EditorialChrome index={sceneIndex} count={props.scenes.length} />}
+      {ed ? <EditorialCaptions captions={props.captions} lang={props.lang} /> : pop ? <PopCaptions captions={props.captions} lang={props.lang} /> : hud ? <HudCaptions captions={props.captions} lang={props.lang} /> : <Captions captions={props.captions} theme={theme} lang={props.lang} />}
+      {!hud && !pop && !ed && landscape && props.chapters && props.chapters.length > 1 && <ChapterLabel chapters={props.chapters} t={t} theme={theme} />}
       {/* 진행 바 */}
-      {!pop && <div style={{ position: 'absolute', left: 0, top: 0, height: 10, width: `${(frame / durationInFrames) * 100}%`, background: theme.accent, opacity: 0.85 }} />}
+      {!pop && !ed && <div style={{ position: 'absolute', left: 0, top: 0, height: 10, width: `${(frame / durationInFrames) * 100}%`, background: theme.accent, opacity: 0.85 }} />}
       {props.audioSrc && <Audio src={resolveSrc(props.audioSrc)!} />}
       {props.musicSrc && (
         <Audio src={resolveSrc(props.musicSrc)!} loop volume={(f) => musicVol * interpolate(f, [0, fps * 1.5, durationInFrames - fps * 2.5, durationInFrames], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} />

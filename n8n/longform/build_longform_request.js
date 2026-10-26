@@ -70,18 +70,19 @@ tags: 10 to 15 search tags without #, specific first.
 hashtags: exactly 3, the last is #NextYouGlobal.
 thumbnail: {"text":"6 to 14 Korean characters, a punchy promise that complements the title (not a copy)","highlight":["one word from text"],"badge":"very short label e.g. 10분 정리 / 말씀 묵상 / 꼭 알아야 할 3가지","prompt":"English image prompt for the thumbnail picture: one striking subject on the RIGHT half, simple darker background on the left for text, same safety rules as image scenes"}
 category: EXACTLY ONE of bible, quote, wealth, health, other.
-style: EXACTLY ONE of hud, classic, pop, keynote, either - which motion-graphics look suits this topic.
-- hud: a sharp, modern editorial look (camera tracking boxes, spec-sheet and tag cards, split-flap numbers, black and white with one orange accent). Fits the mind and brain, psychology, how things really work, modern life, technology, data-driven health facts, sharp contrarian takes.
+style: EXACTLY ONE of hud, classic, pop, keynote, editorial, either - which motion-graphics look suits this topic.
+- hud: a sharp, modern tech-HUD look (camera tracking boxes, spec-sheet and tag cards, split-flap numbers, black and white with one orange accent). Fits the mind and brain, psychology, how things really work, modern life, technology, data-driven health facts, sharp contrarian takes.
 - classic: soft gradients, rounded cards, warm colours. Fits emotional, warm or comforting topics - family and parents, love, grief, gratitude, loneliness, aging gracefully, faith and prayer.
 - pop: loud, playful colour blocks (orange, lime, electric blue), giant bouncing type, morphing shapes, bright patterns. Fits energetic, upbeat topics - habits and routines, motivation, productivity, quick tips and hacks, numbered methods, fun facts.
 - keynote: a clean Apple-keynote launch-film look (warm off-white canvas, black UI, liquid-glass panels over photos, a cursor that clicks toggles, drags sliders and opens pages, smooth zooms). Fits practical, step-by-step and how-to topics - methods and routines to try, smart everyday choices, comparisons and decisions, clear health or money explainers, anything that feels like a calm, premium product demo.
+- editorial: a documentary-explainer magazine look (cream paper, cut-paper collage, a big red circle, photos as taped prints, red hand-drawn marker circles, arrows and strike-outs, typewriter labels, stop-motion movement). Fits explainers with a story or a why - history and origins, how something really works, myths corrected, surprising facts, money and society explained, psychology findings, real people's stories.
 - either: two or more would work equally well.
 Sermons and faith topics are always classic.
 
 mood: EXACTLY ONE of calm_reflective, hopeful_uplifting, tense_dramatic, dark_serious, warm_gentle.
 
 Respond ONLY with valid JSON, no markdown fences, first character the opening brace:
-{"title":"...","description":"...","tags":["..."],"hashtags":["#..."],"category":"...","mood":"...","style":"hud|classic|pop|keynote|either","thumbnail":{"text":"...","highlight":["..."],"badge":"...","prompt":"..."},"chapters":[{"title":"...","scenes":[{"narration":"...","visual":{"type":"headline","text":"...","highlight":["..."]}}]}]}`;
+{"title":"...","description":"...","tags":["..."],"hashtags":["#..."],"category":"...","mood":"...","style":"hud|classic|pop|keynote|editorial|either","thumbnail":{"text":"...","highlight":["..."],"badge":"...","prompt":"..."},"chapters":[{"title":"...","scenes":[{"narration":"...","visual":{"type":"headline","text":"...","highlight":["..."]}}]}]}`;
 
 console.log('롱폼 주제: ' + topic + ' (쇼츠 조회 ' + ($json.shortViews || 0) + ')');
 return [{ json: {

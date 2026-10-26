@@ -38,8 +38,8 @@ if (format !== 'sermon' && format !== 'essay') format = /아멘|Amen/.test(scrip
 let category = String(parsed.category || '').trim().toLowerCase();
 if (!CATEGORIES.includes(category)) category = format === 'sermon' ? 'bible' : 'other';
 const mood = MOODS.includes(parsed.mood) ? parsed.mood : 'calm_reflective';
-// 영상 스타일 적합도 (hud / classic / pop / keynote / either). 실제 선택은 Build Render Job에서
-const styleFit = ['hud', 'classic', 'pop', 'keynote', 'either'].includes(String(parsed.style || '').trim().toLowerCase()) ? String(parsed.style).trim().toLowerCase() : 'either';
+// 영상 스타일 적합도 (hud / classic / pop / keynote / editorial / either). 실제 선택은 Build Render Job에서
+const styleFit = ['hud', 'classic', 'pop', 'keynote', 'editorial', 'either'].includes(String(parsed.style || '').trim().toLowerCase()) ? String(parsed.style).trim().toLowerCase() : 'either';
 
 // ── AI 그림: 이미지 장면 + 그래픽 장면 뒤 사진 배경(bg)을 합쳐 상한까지 (앞 장면부터) ──
 //    이미지 장면이 넘치면 같은 키워드의 headline, 사진 배경이 넘치면 배경 없이
