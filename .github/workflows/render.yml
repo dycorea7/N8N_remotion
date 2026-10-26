@@ -20,7 +20,7 @@ on:
         required: false
         default: short
       style:
-        description: (선택) job.json의 스타일을 덮어쓴다 — classic / glyph / hud / pop / keynote
+        description: (선택) job.json의 스타일을 덮어쓴다 — classic / glyph / hud / pop / keynote / editorial
         required: false
         default: ''
 
