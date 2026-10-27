@@ -5,6 +5,7 @@
 //  - 최근 업로드 2개와 같은 분야는 감점 → 분야가 번갈아 나온다
 //  - 짧은 훅 제목 가산, 「~할수록 오히려 / 역설」 형태 감점
 //  - 롱폼 파생 쇼츠(Source=longform)는 크게 가산 → 롱폼 업로드 뒤 며칠 안에 나간다
+//  - 다시 만들 주제(Source=redo)는 맨 먼저 (잘못 나간 영상을 고쳐 다시 올릴 때 시트에서 Status=pending, Source=redo)
 //  - 점수가 비슷하면 최근에 만든 주제(아래쪽 행) 우선
 // ===== 설정 =====
 // 'skip': 성경 주제는 Bible Shorts가 만든다 / 'first': 성경 주제부터 / 'mix': 분야를 번갈아
@@ -12,7 +13,7 @@ const BIBLE_MODE = 'skip';
 // ================
 const rows = $input.all().map(function (i) { return i.json; }).filter(function (r) { return r && r.Topic; });
 const HANGUL = /[가-힣]/;
-const BIBLE_BOOKS = /(창세기|출애굽기|레위기|민수기|신명기|여호수아|사사기|룻기|사무엘|열왕기|역대|에스라|느헤미야|에스더|욥기|시편|잠언|전도서|아가|이사야|예레미야|애가|에스겔|다니엘|호세아|요엘|아모스|오바댜|요나|미가|나훔|하박국|스바냐|학개|스가랴|말라기|마태복음|마가복음|누가복음|요한복음|사도행전|로마서|고린도|갈라디아서|에베소서|빌립보서|골로새서|데살로니가|디모데|디도서|빌레몬서|히브리서|야고보서|베드로|요한[일이삼]서|유다서|요한계시록)\s*\d+[:장]/;
+const BIBLE_BOOKS = /(창세기|출에굽기|레위기|민수기|신명기|여호수아|사사기|룻기|사무엘|열왕기|역대|에스라|느헤미야|에스더|욥기|시편|잠언|전도서|아가|이사야|예레미야|애가|에스겔|다니엘|호세아|요엘|아모스|오바댜|요나|미가|나훈|하박국|스바냐|학개|스가랴|말라기|마태복음|마가복음|누가복음|요한복음|사도행전|로마서|고린도|갈라디아서|에베소서|빌립보서|골로새서|데살로니가|디모데|디도서|빌레몬서|히브리서|야고보서|베드로|요한[일이삼]서|유다서|요한계시록)\s*\d+[:장]/;
 const HEALTH = /혈압|혈당|수면|잠|근육|무릎|관절|마그네슘|장내|장 속|유익균|노화|건강|나트륨|면역|피부|체중|식후|단백질|비타민|심장|혈관|뼈|호르몬|햇빛/;
 // 습관·관계 같은 말은 건강·지혜 주제에도 흔해서 넣지 않는다 (심리 고유 단어만)
 const PSYCH = /심리|자존감|결심|사과하는|의지력|행동과학|불안|감정|미움받|눈치|습관적|인지 편향|뇌가 /;
@@ -52,6 +53,7 @@ const scored = pending.map(function (r) {
   else if (pillar === recent[1]) { s -= 20; why.push('전전과 같은 분야'); }
   // 롱폼에서 파생된 쇼츠는 롱폼이 올라간 직후에 나가도록 먼저 (분야 감점보다 크게)
   if (String(r.Source || '').trim() === 'longform') { s += 70; why.push('롱폼 파생'); }
+  if (String(r.Source || '').trim() === 'redo') { s += 300; why.push('다시 제작'); }
   if (h.length <= 28) { s += 20; why.push('짧은 훅'); }
   else if (h.length <= 40) { s += 5; }
   else if (h.length > 50) { s -= 15; why.push('제목 김'); }
@@ -72,3 +74,4 @@ scored.slice(0, 5).forEach(function (x, i) {
   console.log((i === 0 ? '▶ ' : '  ') + x.score + '점 [' + x.pillar + '] ' + x.row.row_number + '행 ' + head(x.row.Topic) + (x.why.length ? ' (' + x.why.join(', ') + ')' : ''));
 });
 return [{ json: Object.assign({}, pick.row, { pickedPillar: pick.pillar, pickScore: pick.score }) }];
+
