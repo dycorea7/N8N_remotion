@@ -5,7 +5,7 @@
 //  - 최근 업로드 2개와 같은 분야는 감점 → 분야가 번갈아 나온다
 //  - 짧은 훅 제목 가산, 「~할수록 오히려 / 역설」 형태 감점
 //  - 롱폼 파생 쇼츠(Source=longform)는 크게 가산 → 롱폼 업로드 뒤 며칠 안에 나간다
-//  - 다시 만들 주제(Source=redo)는 맨 먼저 (잘못 나간 영상을 고쳐 다시 올릴 때 시트에서 Status=pending, Source=redo)
+//  - 다시 만들 주제(Status=redo)는 맨 먼저 (잘못 나간 영상을 고쳐 다시 올릴 때 시트에서 Status를 redo로)
 //  - 점수가 비슷하면 최근에 만든 주제(아래쪽 행) 우선
 // ===== 설정 =====
 // 'skip': 성경 주제는 Bible Shorts가 만든다 / 'first': 성경 주제부터 / 'mix': 분야를 번갈아
@@ -36,7 +36,8 @@ if (recent.length < 2) {
   recent = recent.concat(uploaded.slice(0, 2 - recent.length).map(function (r) { return pillarOf(r.Topic); }));
 }
 
-const pending = rows.filter(function (r) { return String(r.Status || '').trim().toLowerCase() === 'pending'; });
+const isRedo = function (r) { return String(r.Status || '').trim().toLowerCase() === 'redo'; };
+const pending = rows.filter(function (r) { const st = String(r.Status || '').trim().toLowerCase(); return st === 'pending' || st === 'redo'; });
 if (!pending.length) throw new Error('pending 주제가 없습니다 — 시트에 주제를 추가하거나 Weekly Topic Generator를 실행하세요');
 const maxRow = Math.max.apply(null, pending.map(function (r) { return Number(r.row_number) || 0; }).concat([1]));
 
@@ -53,7 +54,7 @@ const scored = pending.map(function (r) {
   else if (pillar === recent[1]) { s -= 20; why.push('전전과 같은 분야'); }
   // 롱폼에서 파생된 쇼츠는 롱폼이 올라간 직후에 나가도록 먼저 (분야 감점보다 크게)
   if (String(r.Source || '').trim() === 'longform') { s += 70; why.push('롱폼 파생'); }
-  if (String(r.Source || '').trim() === 'redo') { s += 300; why.push('다시 제작'); }
+  if (isRedo(r)) { s += 300; why.push('다시 제작'); }
   if (h.length <= 28) { s += 20; why.push('짧은 훅'); }
   else if (h.length <= 40) { s += 5; }
   else if (h.length > 50) { s -= 15; why.push('제목 김'); }

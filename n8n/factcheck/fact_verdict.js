@@ -22,7 +22,7 @@ ${list}
 Rewrite the script and fix ONLY these problems:
 - For each doubtful quotation, express the idea in your own words, without quotation marks and without saying the person said it (e.g. 쇼펜하우어는 고통이 사람을 단련한다고 봤습니다). Use a different direct quotation only if it is one of that person's most famous, widely documented lines and you are certain of the wording.
 - If no such quotation remains for a quote card, change that scene's visual to a headline.
-- Correct or remove wrong facts.
+- Correct or remove wrong facts. Remove made-up or unsupported numbers and study claims (say it generally instead); if a stat or chart scene loses its number, change its visual to a headline.
 - Keep every other scene, the length rule, the visual rules and exactly the same JSON format.
 Respond ONLY with the full corrected JSON.`;
 const body = Object.assign({}, orig, { messages: orig.messages.concat([{ role: 'assistant', content: prev }, { role: 'user', content: fix }]) });

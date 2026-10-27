@@ -14,12 +14,10 @@ if (!parsed) return [{ json: { skip: true, reason: 'unparsed' } }];
 const scenes = Array.isArray(parsed.scenes) ? parsed.scenes : (parsed.chapters || []).flatMap(c => (c && c.scenes) || []);
 const narr = scenes.map(x => String((x && x.narration) || '')).filter(Boolean).join('\n');
 const cards = scenes.map(x => x && x.visual).filter(v => v && (v.type === 'quote' || v.type === 'scripture')).map(v => '- [' + v.type + '] ' + v.text + ' — ' + (v.author || ''));
-// 따옴표·인용 표현·성경이 하나도 없으면 검사할 것이 없다
-const hasQuote = cards.length > 0 || /[「」“”"]|말했|라고 했|이렇게 썼|남겼|명언|\d+:\d+/.test(narr);
-if (!hasQuote) return [{ json: { skip: true, reason: 'no quotes' } }];
+// 인용이 없어도 통계·연구 결과 같은 숫자 주장이 있으니 항상 검사한다
 const prompt = `You are a strict fact-checker for a Korean YouTube script. Check ONLY these three things:
 (a) Every direct quotation attributed to a named person (in the narration or on the quote cards): is it a well-documented quotation - a faithful Korean rendering of words that person actually wrote or said, traceable to their works, letters, speeches or a reliable quotation reference? Popular internet "quotes" that are misattributed, invented or only loosely inspired by the person are PROBLEMS. A sentence stated as "X said / 말했습니다 / 라고 했습니다" counts as a quotation.
-(b) Specific factual claims about real named people or events (what they did, ages, years, numbers).
+(b) Specific factual claims: about real named people or events (what they did, ages, years), and every statistic, percentage, amount or "research shows / 연구 결과" claim. A number presented as a fact or a study finding that is not well established (or is invented to sound precise) is a PROBLEM - suggest removing it or stating it generally without a made-up number.
 (c) Scripture: does that reference really contain that wording (Korean 개역개정)?
 Be strict: if you are not confident something is accurate, list it as a problem. Ignore opinions, advice and general statements.
 
