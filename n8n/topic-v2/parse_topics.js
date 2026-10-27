@@ -61,6 +61,10 @@ let longExisting = [];
 try { longExisting = $('Read Longform Topics').all().map(function (i) { return i.json.Topic; }).filter(Boolean); } catch (e) { /* 탭 없음 */ }
 const longAccepted = [], longRejected = [];
 const LONG_PILLARS = ['money', 'wisdom', 'health', 'psychology'];
+// 롱폼 주제는 50만+ 롱폼 벤치마크 영상([L1] 등) 중 하나를 기준으로 해야 한다 → BenchVideo 칸에 영상 ID
+let longMap = {};
+try { longMap = $('Viral Report').first().json.longMap || {}; } catch (e) { /* 벤치마크 없음 */ }
+const haveBench = Object.keys(longMap).length > 0;
 for (const t of (Array.isArray(parsed.longform) ? parsed.longform : [])) {
   const title = String((t && t.title) || '').replace(/["]/g, '”').replace(/\s*—\s*/g, ' ').trim();
   const angle = String((t && t.angle) || '').replace(/["]/g, '”').replace(/\s*[—|]\s*/g, ', ').trim().slice(0, 80);
@@ -69,8 +73,10 @@ for (const t of (Array.isArray(parsed.longform) ? parsed.longform : [])) {
   const pool = longExisting.concat(existing, longAccepted.map(function (a) { return a.Topic; }));
   const dup = pool.some(function (old) { return normalize(old) === normalize(title) || similarity(head(old), title) >= 0.6 || similarity(old, title + ' ' + angle) >= 0.7; });
   if (dup) { longRejected.push(title + ' (기존 주제와 유사)'); continue; }
-  longAccepted.push({ Topic: title + (angle ? ' — ' + angle : ''), Pillar: pillar, Status: 'pending', Source: 'generated', Added: $now.toFormat('yyyy-MM-dd'), LongTitle: '', LongURL: '' });
-  console.log('✔ [롱폼/' + pillar + '] ' + title + (angle ? ' — ' + angle : ''));
+  const bench = longMap[String((t && t.bench) || '').trim().toUpperCase()];
+  if (haveBench && !bench) { longRejected.push(title + ' (50만+ 기준 영상 없음: ' + ((t && t.bench) || '-') + ')'); continue; }
+  longAccepted.push({ Topic: title + (angle ? ' — ' + angle : ''), Pillar: pillar, Status: 'pending', Source: 'generated', Added: $now.toFormat('yyyy-MM-dd'), LongTitle: '', LongURL: '', BenchVideo: bench ? bench.id : '', BenchTitle: bench ? bench.title + ' (' + Math.round(bench.views / 10000) + '만)' : '' });
+  console.log('✔ [롱폼/' + pillar + '] ' + title + (angle ? ' — ' + angle : '') + (bench ? '  ← ' + bench.title : ''));
 }
 if (longRejected.length) console.log('롱폼 제외: ' + longRejected.join(' | '));
 // 제외 목록은 첫 항목에 붙여 텔레그램 요약에서 쓴다

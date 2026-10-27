@@ -13,7 +13,7 @@ if (pendingLong.length) {
   const L = pendingLong[0];
   const src = String(L.Source || '').trim() === 'owner' ? '직접 지정' : '주간 주제 생성기';
   console.log('롱폼 주제 (' + src + ', ' + L.row_number + '행): ' + L.Topic + ' | 남은 pending ' + (pendingLong.length - 1) + '개');
-  return [{ json: { Topic: String(L.Topic), Language: 'Korean', shortVideoId: '', shortViews: 0, shortTitle: '', row_number: null, longTopicRow: L.row_number, longTopic: String(L.Topic), sourceLabel: '롱폼 주제 시트 (' + src + ')' } }];
+  return [{ json: { Topic: String(L.Topic), Language: 'Korean', shortVideoId: '', shortViews: 0, shortTitle: '', row_number: null, longTopicRow: L.row_number, longTopic: String(L.Topic), benchVideo: String(L.BenchVideo || '').trim(), sourceLabel: '롱폼 주제 시트 (' + src + ')' } }];
 }
 console.log('LongformTopics에 pending 주제가 없어 조회수 1위 쇼츠를 씁니다');
 const viewItems = $('Shorts View Counts').first().json.items || [];

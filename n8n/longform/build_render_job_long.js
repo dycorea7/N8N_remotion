@@ -14,9 +14,12 @@ const STYLE_BY_CATEGORY = {};
 //  - 설교·성경: 항상 classic
 //  - 나머지: Claude가 주제에 맞다고 고른 스타일(hud / classic / pop / keynote / editorial). 'either'면 다섯 가지를 날마다 돌아가며 쓴다
 const ROTATION = ['classic', 'hud', 'pop', 'keynote', 'editorial'];
+// 롱폼 스타일 고정 (빈 문자열이면 아래 규칙대로 고른다)
+const FORCE_STYLE = 'editorial';
 // 한 번만 쓰는 스타일 지정: 이 날짜 전까지 만드는 롱폼은 이 스타일로 (10/27 화요일 롱폼 = 키노트). 지나면 자동으로 원래대로
 const ONE_OFF_STYLE = { style: 'keynote', before: '2026-10-28T00:00:00-04:00' };
 function pickStyle(p) {
+  if (FORCE_STYLE) return FORCE_STYLE;
   if (ONE_OFF_STYLE.style && Date.now() < Date.parse(ONE_OFF_STYLE.before)) return ONE_OFF_STYLE.style;
   if (STYLE_BY_CATEGORY[p.category]) return STYLE_BY_CATEGORY[p.category];
   if (p.format === 'sermon' || p.category === 'bible') return 'classic';

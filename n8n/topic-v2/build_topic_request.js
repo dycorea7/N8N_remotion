@@ -102,9 +102,9 @@ ${feedback}
 - MUST NOT duplicate or closely resemble any existing topic:
 ${existing}
 
-=== LONG-FORM TOPICS (8 to 10 minute videos) ===
+=== LONG-FORM TOPICS (17 to 20 minute videos) ===
 Also generate exactly ${LONG_TOTAL} long-form topics: one money pillar, and one from wisdom, health or psychology. Each long-form video is then cut into two Shorts, so it must contain at least two strong standalone points.
-- Use the same market data and the LONG-FORM part of the 500K+ benchmark: pick a subject Korean viewers already watch at length, learn from those videos' length and chapter structure, then make it more practical.
+- Each long-form topic MUST be based on one video from the LONG-FORM list of the 500K+ benchmark: set "bench" to its label (e.g. L3). Pick a reference with very high views whose subject fits our channel, keep the SUBJECT and the big questions it answers (its chapters show them), and give it our own practical angle. Our title must not copy or lightly reword the reference title. Never pick a reference that is about a specific stock, coin, fund, property or a news event.
 - Practical and step-by-step: a method, a routine, a decision, a comparison or a mechanism the viewer can apply - concrete actions, times, numbers and settings.
 - long title: 15 to 32 Korean characters, the searchable keyword first, honest. angle: max 60 characters on what the video covers and its structure (e.g. 3단계, 시간표, 체크리스트).
 - Same honesty rules as the Shorts (health: general and evidence-based; money: literacy, not advice).
@@ -115,7 +115,7 @@ ${existingLong}
 The first character must be the opening brace and the last the closing brace. No prose, no code fences, no straight double-quote characters inside strings.
 shape is one of: number_list, age_target, warning, reason, people, paradox, question, story.
 evidence names the market-data title or pattern that this topic leans on (short).
-{"topics": [{"pillar": "bible|wisdom|health|psychology|money", "title": "...", "angle": "...", "reference": "", "shape": "...", "evidence": "..."}], "longform": [{"pillar": "money|wisdom|health|psychology", "title": "...", "angle": "...", "evidence": "..."}]}`;
+{"topics": [{"pillar": "bible|wisdom|health|psychology|money", "title": "...", "angle": "...", "reference": "", "shape": "...", "evidence": "..."}], "longform": [{"pillar": "money|wisdom|health|psychology", "bench": "L1", "title": "...", "angle": "...", "evidence": "..."}]}`;
 
 console.log('수요 ' + JSON.stringify(demand) + ' → 배정 ' + mixText + ' | 사상가 ' + thinkers.join(', '));
 return [{ json: {

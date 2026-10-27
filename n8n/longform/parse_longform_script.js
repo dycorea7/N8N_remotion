@@ -15,7 +15,7 @@ if (!parsed) throw new Error('Claude 롱폼 JSON 파싱 실패' + (stop === 'max
 
 const src = $('Build Longform Request').first().json;
 const subtitleLang = String(src.Language || 'Korean').trim().toLowerCase() === 'english' ? 'en' : 'ko';
-const maxImages = Number(src.maxImages) || 26;
+const maxImages = Number(src.maxImages) || 36;
 const s = v => String(v == null ? '' : v).replace(/["]/g, '”').trim();
 
 const chaptersIn = (Array.isArray(parsed.chapters) ? parsed.chapters : []).filter(c => c && Array.isArray(c.scenes) && c.scenes.length);
@@ -36,8 +36,8 @@ chaptersIn.forEach((c, ci) => {
     scenes.push({ narration, visual, chapter: ci });
   });
 });
-if (scenes.length < 30) throw new Error('장면이 너무 적습니다: ' + scenes.length + '개');
-if (scenes.length > 140) scenes.splice(140);
+if (scenes.length < 60) throw new Error('장면이 너무 적습니다: ' + scenes.length + '개');
+if (scenes.length > 260) scenes.splice(260);
 
 const MOODS = ['calm_reflective', 'hopeful_uplifting', 'tense_dramatic', 'dark_serious', 'warm_gentle'];
 const CATEGORIES = ['bible', 'quote', 'wealth', 'health', 'other'];
@@ -68,11 +68,12 @@ if (isSermon) for (const x of scenes) if (x.visual.type === 'stat' || x.visual.t
 scenes.forEach((x, i) => { if (x.visual.type === 'outro' && i !== scenes.length - 1) x.visual = { type: 'headline', text: s(x.visual.text), highlight: x.visual.highlight || [] }; });
 
 const len = subtitleLang === 'en' ? script.split(/\s+/).length : script.length;
-const [lo, hi] = subtitleLang === 'en' ? [1000, 2200] : [2400, 5500];
+// 하한은 너무 짧은 대본만 막고, 상한은 ElevenLabs 한 번 요청 한도(10,000자) 아래로
+const [lo, hi] = subtitleLang === 'en' ? [2200, 3800] : [5500, 9600];
 if (len < lo) throw new Error('대본이 너무 짧습니다: ' + len + (subtitleLang === 'en' ? '단어' : '자') + ' (최소 ' + lo + ') — 다시 실행하세요');
 if (len > hi) throw new Error('대본이 너무 깁니다: ' + len + (subtitleLang === 'en' ? '단어' : '자') + ' (최대 ' + hi + ')');
 const warnings = [];
-if (subtitleLang === 'ko' && len < 3200) warnings.push('대본 ' + len + '자 — 목표(3,400자)보다 짧아 8분이 안 될 수 있음');
+if (subtitleLang === 'ko' && len < 7000) warnings.push('대본 ' + len + '자 — 목표(7,000자 이상)보다 짧음');
 
 const th = parsed.thumbnail || {};
 const thumbnail = { text: s(th.text).slice(0, 24) || s(parsed.title).slice(0, 20), highlight: (Array.isArray(th.highlight) ? th.highlight : []).map(s).slice(0, 2), badge: s(th.badge).slice(0, 14), prompt: s(th.prompt) };

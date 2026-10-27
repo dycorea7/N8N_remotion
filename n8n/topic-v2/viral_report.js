@@ -28,22 +28,27 @@ try {
     (it.json.items || []).forEach(function (v) {
       const s = v.statistics || {}, sn = v.snippet || {};
       const views = Number(s.viewCount || 0);
-      if (views < 500000 || !/[가-힣]/.test(sn.title || '')) return;
+      if (views < 500000 || !/[가-힣]/.test(sn.title || '') || longRows.some(function (r) { return r.id === v.id; })) return;
       const chapters = String(sn.description || '').split(/\n/).filter(function (l) { return /^\s*\d{1,2}:\d{2}/.test(l); }).slice(0, 8).map(function (l) { return clean(l, 40); });
-      longRows.push({ pillar: pillar, title: clean(sn.title, 80), views: views, len: dur((v.contentDetails || {}).duration), chapters: chapters });
+      longRows.push({ id: v.id, pillar: pillar, title: clean(sn.title, 80), views: views, len: dur((v.contentDetails || {}).duration), chapters: chapters });
     });
   });
 } catch (e) {}
+// 롱폼 주제는 이 목록의 영상 하나를 기준으로 고른다 → [L1] 같은 번호와 영상 ID 표
+const longMap = {};
 if (longRows.length) {
   lines.push('');
-  lines.push('[LONG-FORM VIDEOS WITH 500K+ VIEWS (last 12 months) - subject, length and structure]');
+  lines.push('[LONG-FORM VIDEOS WITH 500K+ VIEWS (last 12 months) - each long-form topic must be based on one of these; use its label]');
   const byP = {};
   longRows.sort(function (a, b) { return b.views - a.views; }).forEach(function (r) { (byP[r.pillar] = byP[r.pillar] || []).push(r); });
+  let n = 0;
   Object.keys(byP).forEach(function (p) {
-    byP[p].slice(0, 3).forEach(function (r) {
-      lines.push('  - [' + p + '] ' + r.title + ' (조회 ' + fmtV(r.views) + ', ' + r.len + ')' + (r.chapters.length ? '\n    chapters: ' + r.chapters.join(' / ') : ''));
+    byP[p].slice(0, p === 'money' ? 8 : 4).forEach(function (r) {
+      const label = 'L' + (++n);
+      longMap[label] = { id: r.id, title: r.title, views: r.views, pillar: p };
+      lines.push('  - [' + label + '] [' + p + '] ' + r.title + ' (조회 ' + fmtV(r.views) + ', ' + r.len + ')' + (r.chapters.length ? '\n    chapters: ' + r.chapters.join(' / ') : ''));
     });
   });
 }
 console.log('벤치마크: 쇼츠 ' + picks.length + '개, 롱폼 ' + longRows.length + '개');
-return [{ json: { report: lines.join('\n'), shortCount: picks.length, longCount: longRows.length } }];
+return [{ json: { report: lines.join('\n'), shortCount: picks.length, longCount: longRows.length, longMap: longMap } }];
