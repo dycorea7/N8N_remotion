@@ -1,10 +1,10 @@
 // ===== 설정 =====
-// 한 번에 만드는 쇼츠 주제 수. Bible Shorts(하루 1편) 7편 + Motion Shorts 3편.
-// Motion Shorts의 나머지 4편(주)은 롱폼(화·금)마다 2편씩 롱폼에서 파생된 쇼츠 주제로 채워진다.
-const TOTAL = 10;
+// 한 번에 만드는 쇼츠 주제 수. Bible Shorts(하루 1편) 7편 + Motion Shorts 1편.
+// Motion Shorts의 나머지 6편(주)은 롱폼 파생 쇼츠 4편(화·금 롱폼마다 2편) + 비공개 쇼츠 리메이크 2편(Weekly Shorts Remake, 월요일)으로 채워진다.
+const TOTAL = 8;
 // 기둥별 최소 편수. 남는 편수는 이번 주 한국어 쇼츠 수요가 큰 기둥(성경 제외)에 배정한다.
 // 성경은 Bible Shorts가 매일 쓰므로 한 주 치(7편)를 지킨다.
-// 경제·재테크: 여기서 1편 + 경제 롱폼 1편의 파생 쇼츠 2편 = 주 3편 이상.
+// 경제·재테크: 여기서 1편 + 경제 롱폼 1편의 파생 쇼츠 2편 = 주 3편 이상. (TOTAL 8 = 성경 7 + 경제 1)
 const MIN_PER_PILLAR = { bible: 7, wisdom: 0, health: 0, psychology: 0, money: 1 };
 // 롱폼(8~10분) 주제 수 — 화·금 롱폼 2편. 하나는 경제, 하나는 지혜·건강·심리 중에서.
 const LONG_TOTAL = 2;
