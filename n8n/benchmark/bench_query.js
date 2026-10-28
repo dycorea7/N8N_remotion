@@ -3,7 +3,7 @@
 //   - 쇼츠는 짧은 영상, 롱폼은 4~20분 영상. 최근 3년
 // ===== 설정 =====
 const SOURCE_NODE = '__SOURCE_NODE__';   // 주제를 고른 노드
-const MODE = '__MODE__';                 // 'short' | 'long'
+const MODE = 'short';                 // 'short' | 'long'
 // ================
 const row = $(SOURCE_NODE).first().json;
 const topic = String(row.Topic || '');
@@ -25,6 +25,8 @@ for (const w of words) {
 const q = (keys.length >= 2 ? keys.slice(0, 3) : head.split(' ').slice(0, 3)).join(' ');
 const after = new Date(Date.now() - 3 * 365 * 86400000).toISOString();
 // 실제 검색어는 Claude가 '한국 시청자가 검색할 말'로 바꿔 준다 (실패하면 위의 낱말 조합을 그대로 쓴다)
-const body = { model: 'claude-sonnet-4-6', max_tokens: 40, messages: [{ role: 'user', content: 'Give the single YouTube search query Korean viewers would type to find popular videos on this topic: 2 or 3 Korean keywords (nouns), no particles, no quotes, no punctuation. Reply with the query only.\nTopic: ' + head }] };
+// 검색어 2개: 1줄 = 주제 그대로, 2줄 = 같은 시청자가 찾는 조금 넓은 주제 (예: 잠들기 전 스마트폰 → 수면 습관). 다음 노드(Benchmark Queries)가 줄마다 검색한다
+const body = { model: 'claude-sonnet-4-6', max_tokens: 60, messages: [{ role: 'user', content: 'Give two YouTube search queries Korean viewers would type to find popular videos on this topic, one per line. Line 1: the specific subject, 2 or 3 Korean nouns. Line 2: the slightly broader subject the same viewers also search, 2 Korean nouns (e.g. 수면 습관 for a topic about phones before bed). Nouns only, no particles, quotes, numbering or punctuation. Reply with the two lines only.\nTopic: ' + head }] };
 console.log('벤치마크 기본 검색어: ' + q);
 return [{ json: { q: q, duration: MODE === 'long' ? 'medium' : 'short', after: after, body: body } }];
+

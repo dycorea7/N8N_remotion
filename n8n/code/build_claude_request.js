@@ -8,8 +8,8 @@ const language = $json.Language || 'Korean';
 const isKorean = String(language).trim().toLowerCase() === 'korean';
 
 const lengthRule = isKorean
-  ? 'The full narration (all scene narrations together) must be between 270 and 350 Korean characters including spaces (~45 seconds spoken). Under 270 is too thin; over 350 is a failure.'
-  : 'The full narration (all scene narrations together) must be between 115 and 150 English words (~45 seconds spoken). Under 115 is too thin; over 150 is a failure.';
+  ? 'The full narration (all scene narrations together) must be between 250 and 320 Korean characters including spaces (~35 to 40 seconds spoken). Shorter Shorts are watched to the end more often; under 250 is too thin, over 320 is a failure.'
+  : 'The full narration (all scene narrations together) must be between 100 and 135 English words (~35 to 40 seconds spoken). Under 100 is too thin; over 135 is a failure.';
 
 const seed = Math.floor(Date.now() / 86400000) + (Number($json.row_number) || 0);
 
@@ -76,6 +76,14 @@ Earn the length with SPECIFICS (a concrete scene, a real number, a counter-argum
 The first narration line must be under 12 words, open mid-tension or mid-claim, and create an information gap.
 BANNED openings: 지금 마음이 힘드신가요, 힘드신가요, 지치셨나요, 사랑하는 여러분, 오늘도 수고하셨습니다, 혹시 〇〇한 적 있나요, Are you struggling, Have you ever, Let me tell you, In this video.
 
+=== BUILT FOR THE SHORTS FEED (how YouTube decides to push a Short) ===
+YouTube shows a Short to more people when few viewers swipe away in the first seconds, when most watch to the end or replay it, and when people comment. Design for each:
+- No swipe: the first frame already shows the hook claim as big text over a striking picture (scene 1 is a headline or stat, ideally with bg) - no build-up, no greeting. The first line names the viewer's problem or the surprising payoff.
+- Watch to the end: keep one open loop until the last third (e.g. 마지막 하나가 가장 중요합니다) and deliver the promised payoff before the final scene. Never restate what was already said.
+- Replay: write the final narration line so it flows naturally back into the first line when the video loops; no long goodbye.
+- Comments: one scene near the end asks one easy question viewers can answer in a word or a number (A or B, 몇 번째, 해당되는 숫자). Never ask for likes.
+- The outro scene is one short line (under 2 seconds spoken); the subscribe call stays on screen as the outro cta, not in the narration.
+
 === STEP 1: CLASSIFY ===
 format: sermon or essay. category: EXACTLY ONE of bible, quote, wealth, health, other.
 
@@ -89,9 +97,9 @@ Only quotes genuinely and widely attributed. Facts and figures accurate and main
 For the ending: ${closing}.
 
 === STEP 3: SCENES (this is the motion design) ===
-Split the narration into 8 to 11 scenes, in order. Each scene = { "narration": the exact words spoken during it (one or two sentences), "visual": what is on screen }.
+Split the narration into 10 to 12 scenes, in order (a new visual every 2 to 4 seconds). Each scene = { "narration": the exact words spoken during it (one or two sentences), "visual": what is on screen }.
 Joining every narration with a line break must give the complete script - nothing spoken outside scenes. Narration is spoken text only: no stage directions, no emoji, no brackets.
-Each scene lasts while its narration is spoken (about 3-6 seconds), so the visual must be readable at a glance.
+Each scene lasts while its narration is spoken (about 2-4 seconds), so the visual must be readable at a glance.
 
 The narration already appears as captions, so on-screen text must NOT repeat the narration. It is the headline a designer would pull out: the key phrase, number, or contrast, short and punchy.
 
@@ -119,9 +127,9 @@ Design rules:
 - Never use the straight double-quote character inside any value; use “ ” or 「 」.
 
 === STEP 4: SEO ===
-title: under 90 characters, hook front-loaded; include the scripture reference for sermons.
-description: two or three lines on the question the video answers; three lines starting with ✔ naming situations the viewer might be in; one line on what they gain; channel line (Korean: 📌 Next You Global 채널은 성경 말씀, 동기부여, 부자 마인드셋, 자기계발 쇼츠를 업로드합니다. English: 📌 Next You Global posts Bible devotionals, motivation, wealth mindset and self-improvement shorts.); subscribe line (Korean: 👉 구독 & 좋아요로 함께 성장해요! English: 👉 Subscribe and like to grow with us!).
-hashtags: 12 to 16, specific first, then broad, then #NextYouGlobal.
+title: 20 to 45 characters, the main search keyword in the first words, a clear payoff the video really delivers; include the scripture reference for sermons.
+description: the first line states the main search keyword phrase as a question or promise (it is what search and suggestions read first), then one or two lines on the question the video answers; three lines starting with ✔ naming situations the viewer might be in; one line on what they gain; channel line (Korean: 📌 Next You Global 채널은 성경 말씀, 동기부여, 부자 마인드셋, 자기계발 쇼츠를 업로드합니다. English: 📌 Next You Global posts Bible devotionals, motivation, wealth mindset and self-improvement shorts.); subscribe line (Korean: 👉 구독 & 좋아요로 함께 성장해요! English: 👉 Subscribe and like to grow with us!).
+hashtags: 4 to 6 - the main search keyword first, then specific topic tags, #NextYouGlobal last. No generic tags (#fyp, #viral, #추천).
 
 === VISUAL STYLE ===
 style: EXACTLY ONE of hud, classic, pop, keynote, editorial, either - which motion-graphics look suits this topic.
@@ -141,4 +149,5 @@ Respond ONLY with valid JSON, no markdown fences:
 
 console.log('seed ' + seed + ' | sermon: ' + sermonShape.split(' - ')[0] + ' | essay: ' + essayFormat.split(' - ')[0]);
 return [{ json: { body: { model: 'claude-sonnet-4-6', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] }, Topic: topic, Language: language, row_number: $json.row_number, useImages: USE_AI_IMAGES, maxImages: MAX_IMAGES, LongURL: longUrl, Source: String($json.Source || ''), benchmarkCount: Number($json.benchmarkCount || 0) } }];
+
 
