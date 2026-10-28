@@ -37,8 +37,18 @@ if (recent.length < 2) {
   recent = recent.concat(uploaded.slice(0, 2 - recent.length).map(function (r) { return pillarOf(r.Topic); }));
 }
 
-const isRedo = function (r) { return String(r.Status || '').trim().toLowerCase() === 'redo'; };
-const pending = rows.filter(function (r) { const st = String(r.Status || '').trim().toLowerCase(); return st === 'pending' || st === 'redo'; });
+// 하루 2번 실행: 제작 중인 주제는 Status를 making|원래상태|시각 으로 표시해 두 번째 실행이 같은 주제를 다시 고르지 않게 한다.
+// 승인 없이 MAKING_STALE_H시간이 지나면(오류로 멈춘 실행 등) 원래 상태로 돌아가 다시 고를 수 있다.
+const MAKING_STALE_H = 30;
+const statusOf = function (r) {
+  const st = String(r.Status || '').trim().toLowerCase();
+  const m = st.match(/^making\|([a-z]*)\|(.+)$/);
+  if (!m) return st;
+  const age = (Date.now() - Date.parse(m[2].toUpperCase())) / 3600000;
+  return age > MAKING_STALE_H ? (m[1] || 'pending') : 'making';
+};
+const isRedo = function (r) { return statusOf(r) === 'redo'; };
+const pending = rows.filter(function (r) { const st = statusOf(r); return st === 'pending' || st === 'redo'; });
 if (!pending.length) throw new Error('pending 주제가 없습니다 — 시트에 주제를 추가하거나 Weekly Topic Generator를 실행하세요');
 const maxRow = Math.max.apply(null, pending.map(function (r) { return Number(r.row_number) || 0; }).concat([1]));
 
@@ -77,5 +87,5 @@ console.log('최근 분야: ' + recent.join(', ') + ' | pending ' + pending.leng
 scored.slice(0, 5).forEach(function (x, i) {
   console.log((i === 0 ? '▶ ' : '  ') + x.score + '점 [' + x.pillar + '] ' + x.row.row_number + '행 ' + head(x.row.Topic) + (x.why.length ? ' (' + x.why.join(', ') + ')' : ''));
 });
-return [{ json: Object.assign({}, pick.row, { pickedPillar: pick.pillar, pickScore: pick.score }) }];
+return [{ json: Object.assign({}, pick.row, { pickedPillar: pick.pillar, pickScore: pick.score, MakingStatus: 'making|' + statusOf(pick.row) + '|' + new Date().toISOString() }) }];
 

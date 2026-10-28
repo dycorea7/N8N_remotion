@@ -1,11 +1,11 @@
 // ===== 설정 =====
-// 한 번에 만드는 쇼츠 주제 수. Bible Shorts(하루 1편) 7편 + Motion Shorts 1편.
-// Motion Shorts의 나머지 6편(주)은 롱폼 파생 쇼츠 4편(화·금 롱폼마다 2편) + 비공개 쇼츠 리메이크 2편(Weekly Shorts Remake, 월요일)으로 채워진다.
-const TOTAL = 8;
+// 한 번에 만드는 쇼츠 주제 수. Motion Shorts가 하루 2편(주 14편)을 만든다 (성경 쇼츠는 2026-10-28 중단).
+// 나머지는 롱폼 파생 쇼츠 4편(화·금 롱폼마다 2편) + 리메이크(주간 2편 + 24시간 점검)로 채워진다.
+const TOTAL = 10;
 // 기둥별 최소 편수. 남는 편수는 이번 주 한국어 쇼츠 수요가 큰 기둥(성경 제외)에 배정한다.
-// 성경은 Bible Shorts가 매일 쓰므로 한 주 치(7편)를 지킨다.
-// 경제·재테크: 여기서 1편 + 경제 롱폼 1편의 파생 쇼츠 2편 = 주 3편 이상. (TOTAL 8 = 성경 7 + 경제 1)
-const MIN_PER_PILLAR = { bible: 7, wisdom: 0, health: 0, psychology: 0, money: 1 };
+// 성경 주제는 더 만들지 않는다 (Bible Shorts 중단 — 조회수가 다른 분야의 1/4 수준).
+// 지혜·건강·심리·경제 각 2편 + 수요가 큰 분야에 2편 더.
+const MIN_PER_PILLAR = { bible: 0, wisdom: 2, health: 2, psychology: 2, money: 2 };
 // 롱폼(8~10분) 주제 수 — 화·금 롱폼 2편. 하나는 경제, 하나는 지혜·건강·심리 중에서.
 const LONG_TOTAL = 2;
 const PILLAR_DESC = {
@@ -69,7 +69,7 @@ try {
 
 const pillarLines = Object.keys(mix).filter(function (k) { return mix[k] > 0; }).map(function (k) { return '- ' + k + ' x' + mix[k] + ': ' + PILLAR_DESC[k]; }).join('\n');
 
-const prompt = `You are the content strategist for NextYou Global, a Korean YouTube Shorts channel (faith, life wisdom, health science, psychology, money and the economy). The goal of this batch is VIEWS: pick subjects Korean Shorts viewers are already watching in large numbers, and frame each so it stops a scrolling thumb.
+const prompt = `You are the content strategist for NextYou Global, a Korean YouTube Shorts channel (life wisdom, health science, psychology, money and the economy). The goal of this batch is VIEWS: pick subjects Korean Shorts viewers are already watching in large numbers, and frame each so it stops a scrolling thumb.
 
 Generate exactly ${TOTAL} new Shorts topics and ${LONG_TOTAL} long-form topics (section below), all in Korean. Shorts pillar counts (exactly):
 ${pillarLines}

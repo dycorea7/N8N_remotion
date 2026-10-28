@@ -1,9 +1,6 @@
 // 기둥별 유튜브 쇼츠 검색어 (한국어만). 기둥 이름은 Build Topic Request의 PILLARS와 같아야 한다.
-// search.list 1회 = 할당량 100. 18개 = 1,800 + 영상/채널 조회 36 ≈ 1,840 / 주 1회 (하루 한도 10,000).
+// search.list 1회 = 할당량 100. 15개 = 1,500 + 영상/채널 조회 30 ≈ 1,530 / 주 1회 (하루 한도 10,000). 성경 검색어는 성경 쇼츠 중단으로 뺐다.
 const Q = [
-  ['bible', '성경 말씀 #shorts'],
-  ['bible', '오늘의 말씀 묵상 #shorts'],
-  ['bible', '하나님 기도 #shorts'],
   ['wisdom', '인생 명언 #shorts'],
   ['wisdom', '철학 명언 #shorts'],
   ['wisdom', '인간관계 조언 #shorts'],
