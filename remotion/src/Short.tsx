@@ -14,6 +14,7 @@ import { Backdrop, Chrome, FilmFx as HudFilm, HudCaptions } from './hud/chrome';
 import { HudSceneView } from './hud/scenes';
 import { FONT_LOADS as HUD_FONTS, HUD_THEME } from './hud/util';
 import { PopCaptions, PopChrome, PopSceneView, blockOf } from './pop/scenes';
+import { PopFilm } from './pop/parts';
 import { FONT_LOADS as POP_FONTS, POP_THEME, isLight } from './pop/util';
 import { resolveSrc } from './assets';
 import { KeynoteShort } from './keynote/Keynote';
@@ -59,7 +60,8 @@ export const Short: React.FC<ShortProps> = (props) => {
       {glyph && <FilmFx />}
       {hud && <HudFilm dark={props.scenes[sceneIndex]?.visual.type === 'image'} />}
       {hud && <Chrome dark={props.scenes[sceneIndex]?.visual.type === 'image'} sceneIndex={sceneIndex} sceneCount={props.scenes.length} ticker={ticker} />}
-      {pop && props.scenes[sceneIndex] && <PopChrome type={props.scenes[sceneIndex].visual.type} index={sceneIndex} light={isLight(blockOf(props.scenes[sceneIndex].visual.type, sceneIndex)[0])} />}
+      {pop && <PopFilm />}
+      {pop && props.scenes[sceneIndex] && <PopChrome type={props.scenes[sceneIndex].visual.type} index={sceneIndex} since={frame - Math.round(props.scenes[sceneIndex].start * fps)} light={isLight(blockOf(props.scenes[sceneIndex].visual.type, sceneIndex)[0])} />}
       {ed && <EditorialChrome index={sceneIndex} count={props.scenes.length} />}
       {ed ? <EditorialCaptions captions={props.captions} lang={props.lang} /> : pop ? <PopCaptions captions={props.captions} lang={props.lang} /> : hud ? <HudCaptions captions={props.captions} lang={props.lang} /> : <Captions captions={props.captions} theme={theme} lang={props.lang} />}
       {!hud && !pop && !ed && landscape && props.chapters && props.chapters.length > 1 && <ChapterLabel chapters={props.chapters} t={t} theme={theme} />}

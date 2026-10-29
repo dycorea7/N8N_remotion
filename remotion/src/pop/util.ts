@@ -40,3 +40,20 @@ export const elastic = (x: number) => {
 };
 export const backOut = (x: number) => { const c1 = 1.70158, c3 = c1 + 1; const t = Math.max(0, Math.min(1, x)) - 1; return 1 + c3 * t * t * t + c1 * t * t; };
 export const pad2 = (n: number) => String(n).padStart(2, '0');
+
+// 쇼릴 이징 (expo 계열) — 들어올 때 빠르게 붙고, 빠질 때 빨려 나간다
+const c01 = (x: number) => Math.max(0, Math.min(1, x));
+export const outExpo = (x: number) => { x = c01(x); return x >= 1 ? 1 : 1 - Math.pow(2, -10 * x); };
+export const inExpo = (x: number) => { x = c01(x); return x <= 0 ? 0 : Math.pow(2, 10 * x - 10); };
+export const inOutCubic = (x: number) => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+
+/** CSS cubic-bezier(x1, y1, x2, y2)와 같은 이징: 시간 x → 값 y */
+export function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
+  const bx = (s: number) => 3 * (1 - s) * (1 - s) * s * x1 + 3 * (1 - s) * s * s * x2 + s * s * s;
+  const by = (s: number) => 3 * (1 - s) * (1 - s) * s * y1 + 3 * (1 - s) * s * s * y2 + s * s * s;
+  return (x: number) => {
+    x = c01(x); let lo = 0, hi = 1;
+    for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (bx(m) < x) lo = m; else hi = m; }
+    return by((lo + hi) / 2);
+  };
+}
