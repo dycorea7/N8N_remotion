@@ -44,6 +44,10 @@ reqs.forEach((r, k) => {
   else { imagesFailed++; failures.push('장면 ' + (idx + 1) + ': ' + JSON.stringify(out && (out.error || out.detail) || 'no image').slice(0, 160)); }
 });
 for (const s of scenes) if (s.visual) { delete s.visual.prompt; delete s.visual.bg; } // 렌더러에는 필요 없음
+// 처음-끝 이어짐: 마지막 장면 뒤에 첫 장면 그림을 깔아, 쇼츠가 다시 시작될 때 화면이 끊기지 않고 이어지게 한다
+const firstV = scenes[0] && scenes[0].visual, lastV = scenes.length > 1 && scenes[scenes.length - 1].visual;
+const firstPic = firstV && (firstV.type === 'image' ? firstV.src : firstV.bgSrc);
+if (lastV && firstPic && lastV.type !== 'image') lastV.bgSrc = firstPic;
 
 // ── 배경음악: 드라이브 라이브러리에서 무드에 맞는 곡 하나 ──
 let musicUrl = '', musicName = 'none';

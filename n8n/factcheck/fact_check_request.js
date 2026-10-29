@@ -1,4 +1,4 @@
-// 사실 확인 1/3: 대본에서 인용·인물 사실·성경 구절만 뽑아 Claude에게 따로 검사시킨다
+// 사실 확인 1/3: 대본에서 인용·인물 사실·숫자·연구·성경 구절을 Claude가 웹 검색으로 직접 확인한다 (지어낸 내용이 영상에 나가지 않게)
 //  - 잘못 붙은 명언(인터넷에 도는 가짜 명언)이 그대로 영상에 나가는 것을 막는다
 // ===== 설정 =====
 const SCRIPT_NODE = 'Claude - Script & Motion Design';   // 대본을 쓴 Claude 노드
@@ -15,15 +15,16 @@ const scenes = Array.isArray(parsed.scenes) ? parsed.scenes : (parsed.chapters |
 const narr = scenes.map(x => String((x && x.narration) || '')).filter(Boolean).join('\n');
 const cards = scenes.map(x => x && x.visual).filter(v => v && (v.type === 'quote' || v.type === 'scripture')).map(v => '- [' + v.type + '] ' + v.text + ' — ' + (v.author || ''));
 // 인용이 없어도 통계·연구 결과 같은 숫자 주장이 있으니 항상 검사한다
-const prompt = `You are a strict fact-checker for a Korean YouTube script. Check ONLY these three things:
+const prompt = `You are a strict fact-checker for a Korean YouTube script. You have a web_search tool: USE IT. Search (Korean or English) to verify every checkable claim below before you judge it - do not rely on memory alone. A claim you cannot confirm with a reliable source (encyclopedia, original text, university, government or health body, peer-reviewed study, major news outlet, reputable quotation reference) is a PROBLEM. Check ONLY these things:
 (a) Every direct quotation attributed to a named person (in the narration or on the quote cards): is it a well-documented quotation - a faithful Korean rendering of words that person actually wrote or said, traceable to their works, letters, speeches or a reliable quotation reference? Popular internet "quotes" that are misattributed, invented or only loosely inspired by the person are PROBLEMS. A sentence stated as "X said / 말했습니다 / 라고 했습니다" counts as a quotation.
 (b) Specific factual claims: about real named people or events (what they did, ages, years), and every statistic, percentage, amount or "research shows / 연구 결과" claim. A number presented as a fact or a study finding that is not well established (or is invented to sound precise) is a PROBLEM - suggest removing it or stating it generally without a made-up number.
 (c) Scripture: does that reference really contain that wording (Korean 개역개정)?
+(d) Invented stories or experiments presented as real (e.g. we tried it for 7 days, a named person did something they did not do) are PROBLEMS.
 Be strict: if you are not confident something is accurate, list it as a problem. Ignore opinions, advice and general statements.
 
 Narration:
 ${narr}
 ${cards.length ? '\nOn-screen quote/scripture cards:\n' + cards.join('\n') : ''}
 
-Respond ONLY with JSON: {"ok": true or false, "problems": [{"text": "the exact doubtful sentence or quote", "issue": "why it is doubtful", "fix": "how to correct it - usually: paraphrase without quotation marks"}]}`;
-return [{ json: { skip: false, body: { model: 'claude-sonnet-4-6', max_tokens: 1500, temperature: 0, messages: [{ role: 'user', content: prompt }] } } }];
+After searching, end your reply with ONE JSON object and nothing after it: {"ok": true or false, "checked": number of claims checked, "problems": [{"text": "the exact doubtful sentence or quote", "issue": "why it is doubtful, citing what the search found", "fix": "how to correct it - usually: paraphrase without quotation marks, or state it generally without the number", "source": "URL that shows the correct fact, or empty"}]}`;
+return [{ json: { skip: false, body: { model: 'claude-sonnet-4-6', max_tokens: 4000, temperature: 0, tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }], messages: [{ role: 'user', content: prompt }] } } }];

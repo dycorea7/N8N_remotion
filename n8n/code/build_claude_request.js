@@ -71,6 +71,7 @@ Write everything viewers see or hear - narration, on-screen text, title, descrip
 === LENGTH (hard rule) ===
 ${lengthRule}
 Earn the length with SPECIFICS (a concrete scene, a real number, a counter-argument), never with restatement.
+FACTS (hard rule): after you write, every quotation, number, study, named-person fact and scripture wording is checked with web search, and anything that cannot be confirmed is cut. So never invent a statistic, study, experiment, personal story or quote; use only facts you are sure are well documented, and say a point generally when you are not sure of the exact figure.
 
 === THE FIRST TWO SECONDS DECIDE EVERYTHING ===
 The first narration line must be under 12 words, open mid-tension or mid-claim, and create an information gap.
@@ -80,7 +81,8 @@ BANNED openings: 지금 마음이 힘드신가요, 힘드신가요, 지치셨나
 YouTube shows a Short to more people when few viewers swipe away in the first seconds, when most watch to the end or replay it, and when people comment. Design for each:
 - No swipe: the first frame already shows the hook claim as big text over a striking picture (scene 1 is a headline or stat, ideally with bg) - no build-up, no greeting. The first line names the viewer's problem or the surprising payoff.
 - Watch to the end: keep one open loop until the last third (e.g. 마지막 하나가 가장 중요합니다) and deliver the promised payoff before the final scene. Never restate what was already said.
-- Replay: write the final narration line so it flows naturally back into the first line when the video loops; no long goodbye.
+- LOOP (hard rule): Shorts replay automatically, so the end must flow straight into the start. Write the last narration line so that, read aloud together with the first line, it sounds like one natural sentence or a question and its answer (e.g. last: 그러니 오늘 밤 이것 하나만 기억하세요 → first line). Never end with a goodbye, a thank-you or a subscribe request in the narration.
+- LOOP visually too: the last scene's on-screen text repeats scene 1's key phrase (same words), so the final frame looks like the first frame; the video reuses scene 1's picture behind it automatically.
 - Comments: one scene near the end asks one easy question viewers can answer in a word or a number (A or B, 몇 번째, 해당되는 숫자). Never ask for likes.
 - The outro scene is one short line (under 2 seconds spoken); the subscribe call stays on screen as the outro cta, not in the narration.
 
