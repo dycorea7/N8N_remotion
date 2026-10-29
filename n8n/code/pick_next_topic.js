@@ -8,11 +8,12 @@
 //  - 리메이크 주제(Source=remake)는 가산 → 추가된 주에 나간다
 //  - 다시 만들 주제(Status=redo)는 맨 먼저 (잘못 나간 영상을 고쳐 다시 올릴 때 시트에서 Status를 redo로)
 //  - 점수가 비슷하면 최근에 만든 주제(아래쪽 행) 우선
+//  - 지금 뜨는 쇼츠(Trend Pick): 최근 7일 인기 쇼츠에 가장 가까운 대기 주제를 고르거나, 맞는 것이 없으면 새 주제를 만든다 (redo가 있으면 redo가 먼저)
 // ===== 설정 =====
 // 'skip': 성경 주제는 Bible Shorts가 만든다 / 'first': 성경 주제부터 / 'mix': 분야를 번갈아
 const BIBLE_MODE = 'skip';
 // ================
-const rows = $input.all().map(function (i) { return i.json; }).filter(function (r) { return r && r.Topic; });
+const rows = $('Read Topic Sheet').all().map(function (i) { return i.json; }).filter(function (r) { return r && r.Topic; });
 const HANGUL = /[가-힣]/;
 const BIBLE_BOOKS = /(창세기|출에굽기|레위기|민수기|신명기|여호수아|사사기|룻기|사무엘|열왕기|역대|에스라|느헤미야|에스더|욥기|시편|잠언|전도서|아가|이사야|예레미야|애가|에스겔|다니엘|호세아|요엘|아모스|오바댜|요나|미가|나훈|하박국|스바냐|학개|스가랴|말라기|마태복음|마가복음|누가복음|요한복음|사도행전|로마서|고린도|갈라디아서|에베소서|빌립보서|골로새서|데살로니가|디모데|디도서|빌레몬서|히브리서|야고보서|베드로|요한[일이삼]서|유다서|요한계시록)\s*\d+[:장]/;
 const HEALTH = /혈압|혈당|수면|잠|근육|무릎|관절|마그네슘|장내|장 속|유익균|노화|건강|나트륨|면역|피부|체중|식후|단백질|비타민|심장|혈관|뼈|호르몬|햇빛/;
@@ -49,7 +50,6 @@ const statusOf = function (r) {
 };
 const isRedo = function (r) { return statusOf(r) === 'redo'; };
 const pending = rows.filter(function (r) { const st = statusOf(r); return st === 'pending' || st === 'redo'; });
-if (!pending.length) throw new Error('pending 주제가 없습니다 — 시트에 주제를 추가하거나 Weekly Topic Generator를 실행하세요');
 const maxRow = Math.max.apply(null, pending.map(function (r) { return Number(r.row_number) || 0; }).concat([1]));
 
 const scored = pending.map(function (r) {
@@ -77,7 +77,33 @@ const scored = pending.map(function (r) {
   return { row: r, score: s, pillar: pillar, why: why };
 }).sort(function (a, b) { return b.score - a.score || (b.row.row_number || 0) - (a.row.row_number || 0); });
 
-const pick = scored[0];
+// ── 지금 뜨는 쇼츠에 맞춘 선택 ──
+const normHead = function (t) { return String(t || '').split(/\s[—|]\s/)[0].replace(/[^\p{L}\p{N}]/gu, ''); };
+let trendPick = null;
+try {
+  const raw = String((($('Claude - Trend Pick').first().json.content || [])[0] || {}).text || '');
+  const d = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
+  const topT = $('Trend Request').first().json.top || [];
+  const tr = topT[Number(String(d.trend || '').replace(/\D/g, '')) - 1] || null;
+  const trendNote = tr ? tr.title + ' (' + tr.vpd + '회/일)' : '';
+  if (d.choice === 'existing') {
+    const s = scored.find(function (x) { return Number(x.row.row_number) === Number(d.row) && x.score >= 0; });
+    if (s) trendPick = { row: s.row, pillar: s.pillar, why: d.why, note: trendNote };
+  } else if (d.choice === 'new') {
+    const clean = function (x, n) { return String(x || '').replace(/["]/g, '”').replace(/\s*[—|]\s*/g, ', ').replace(/\s+/g, ' ').trim().slice(0, n); };
+    const title = clean(d.title, 40).replace(/,\s*$/, ''), angle = clean(d.angle, 60);
+    const heads = rows.map(function (r) { return normHead(r.Topic); });
+    if (/[가-힣]/.test(title) && title.length >= 8 && title.length <= 34 && heads.indexOf(normHead(title)) === -1) {
+      const PILLARS = ['wisdom', 'psychology', 'health', 'money'];
+      trendPick = { row: { Topic: title + (angle ? ' — ' + angle : ''), Language: 'Korean', Status: 'pending', VideoURL: '', Source: 'trend' }, pillar: PILLARS.indexOf(d.pillar) >= 0 ? d.pillar : pillarOf(title), why: d.why, note: trendNote, isNew: true };
+    }
+  }
+  console.log('지금 뜨는 쇼츠 → ' + (trendPick ? (trendPick.isNew ? '새 주제 ' : '대기 주제 ') + trendPick.row.Topic + ' ← ' + trendPick.note + ' | ' + (d.why || '') : '선택 없음 (점수 순으로 고른다)'));
+} catch (e) { console.log('지금 뜨는 쇼츠 판단 실패 → 점수 순으로 고른다'); }
+
+let pick = scored[0];
+if (trendPick && !(pick && isRedo(pick.row))) pick = { row: trendPick.row, score: 999, pillar: trendPick.pillar, why: ['지금 뜨는 주제: ' + trendPick.note] };
+if (!pick) throw new Error('pending 주제가 없습니다 — 시트에 주제를 추가하거나 Weekly Topic Generator를 실행하세요');
 if (pick.score < 0) throw new Error('쓸 수 있는 pending 주제가 없습니다 (남은 것이 전부 영어이거나 성경 주제 — 성경 주제는 Bible Shorts가 만듭니다)');
 
 // 다음 실행을 위해 이번 분야를 기억 (프로덕션 실행에서만 저장됨)
@@ -87,5 +113,5 @@ console.log('최근 분야: ' + recent.join(', ') + ' | pending ' + pending.leng
 scored.slice(0, 5).forEach(function (x, i) {
   console.log((i === 0 ? '▶ ' : '  ') + x.score + '점 [' + x.pillar + '] ' + x.row.row_number + '행 ' + head(x.row.Topic) + (x.why.length ? ' (' + x.why.join(', ') + ')' : ''));
 });
-return [{ json: Object.assign({}, pick.row, { pickedPillar: pick.pillar, pickScore: pick.score, MakingStatus: 'making|' + statusOf(pick.row) + '|' + new Date().toISOString() }) }];
+return [{ json: Object.assign({}, pick.row, { pickedPillar: pick.pillar, pickScore: pick.score, MakingStatus: 'making|' + (statusOf(pick.row) || 'pending') + '|' + new Date().toISOString(), TrendRef: trendPick && pick.row === trendPick.row ? trendPick.note : '' }) }];
 
