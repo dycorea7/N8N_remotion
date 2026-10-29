@@ -67,6 +67,19 @@ try {
   }
 } catch (e) { console.log('Insights 탭을 읽지 못함'); }
 
+// ── 우리 채널 성적 (Own Performance: 조회수 + 평균 시청 비율) → 강한 테마 쪽으로, 약한 테마·최근 14일 주제는 피한다 ──
+try {
+  const perf = $('Own Performance').first().json;
+  const tl = function (k) { return (perf.themes || []).filter(function (t) { return k.indexOf(t.key) >= 0; }).map(function (t) { return t.label + ' (채널 중간값의 ' + t.ratio + '배, ' + t.n + '편)'; }).join(', ') || '(none yet)'; };
+  feedback += '\n\nOUR CHANNEL - real results of our last ~6 weeks of Shorts (median ' + perf.overallMedian + ' views' + (perf.analyticsOk ? ', median ' + perf.overallAvp + '% of each video watched' : '') + '):\n' +
+    '- Best: ' + perf.top.join(' / ') + '\n' +
+    '- Worst: ' + perf.bottom.join(' / ') + '\n' +
+    '- STRONG themes for our audience: ' + tl(perf.strong) + '\n' +
+    '- WEAK themes for our audience: ' + tl(perf.weak) + '\n' +
+    '- Uploaded in the last 14 days: ' + perf.recent.map(function (r) { return r.head; }).join(' / ') + '\n' +
+    'Inside each pillar, lean toward our STRONG themes (at least half of the topics should touch one), write at most one topic in a WEAK theme and only with a clearly new angle, and never repeat a subject or viewer worry from the last 14 days.';
+} catch (e) { console.log('채널 성적 없음'); }
+
 const pillarLines = Object.keys(mix).filter(function (k) { return mix[k] > 0; }).map(function (k) { return '- ' + k + ' x' + mix[k] + ': ' + PILLAR_DESC[k]; }).join('\n');
 
 const prompt = `You are the content strategist for NextYou Global, a Korean YouTube Shorts channel (life wisdom, health science, psychology, money and the economy). The goal of this batch is VIEWS: pick subjects Korean Shorts viewers are already watching in large numbers, and frame each so it stops a scrolling thumb.
