@@ -10,7 +10,11 @@ const PLAYLISTS = {
 };
 
 const p = $('Parse Script JSON').first().json;
-const target = PLAYLISTS[p.category] || PLAYLISTS.other;
+// 시리즈 회차는 시리즈 재생목록으로 (회차 순서대로 쌓인다)
+let row = {};
+try { row = $('Pick Next Topic').first().json || {}; } catch (e) {}
+const SERIES_PLAYLISTS = { '뇌과학 도파민 디톡스': { title: '뇌과학 도파민 디톡스 10부작', description: '집중력·피로·습관을 뇌과학으로 풀어 보는 쇼츠 시리즈 (EP.1~10)' } };
+const target = (String(row.Source || '').trim() === 'series' && SERIES_PLAYLISTS[String(row.Series || '').trim()]) || PLAYLISTS[p.category] || PLAYLISTS.other;
 const res = $input.first().json || {};
 
 // 조회가 실패했는데 새로 만들면 같은 재생목록이 매일 하나씩 생긴다. 그럴 땐 건너뛴다.

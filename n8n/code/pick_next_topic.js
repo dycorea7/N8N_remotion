@@ -10,6 +10,7 @@
 //  - 점수가 비슷하면 최근에 만든 주제(아래쪽 행) 우선
 //  - 우리 채널 성적(Own Performance): 강한 테마 가산, 약한 테마 감점, 최근 14일에 올린 영상과 비슷한 주제는 건너뜀, 이틀 안에 같은 테마는 감점
 //  - 리메이크 주제: 원본과 이틀 간격(RemakeAfter), 원본과 비슷한 각도면 건너뜀, 원본이 약한 테마인데 같은 테마로 다시 만들면 건너뜀
+//  - 시리즈(Source=series): 하루 한 편, 그날 첫 실행에서 Episode 순서대로. 일반 점수 경쟁에는 끼지 않는다
 //  - 지금 뜨는 쇼츠(Trend Pick): 최근 7일 인기 쇼츠에 가장 가까운 대기 주제를 고르거나, 맞는 것이 없으면 새 주제를 만든다 (redo가 있으면 redo가 먼저)
 // ===== 설정 =====
 // 'skip': 성경 주제는 Bible Shorts가 만든다 / 'first': 성경 주제부터 / 'mix': 분야를 번갈아
@@ -53,6 +54,7 @@ const statusOf = function (r) {
 // 리메이크 행(Source=remake)은 Status가 redo여도 맨 먼저 만들지 않는다 (아래 리메이크 규칙을 따른다)
 const isRemake = function (r) { return String(r.Source || '').trim() === 'remake'; };
 const isRedo = function (r) { return statusOf(r) === 'redo' && !isRemake(r); };
+const isSeries = function (r) { return String(r.Source || '').trim() === 'series'; };
 const pending = rows.filter(function (r) { const st = statusOf(r); return st === 'pending' || st === 'redo'; });
 const maxRow = Math.max.apply(null, pending.map(function (r) { return Number(r.row_number) || 0; }).concat([1]));
 
@@ -89,6 +91,7 @@ const scored = pending.map(function (r) {
   // 조회수가 안 나와 비공개한 쇼츠의 리메이크(Weekly Shorts Remake가 주 2편 추가) → 그 주 안에 나가도록 가산
   if (String(r.Source || '').trim() === 'remake') { s += 50; why.push('리메이크'); }
   if (isRedo(r)) { s += 300; why.push('다시 제작'); }
+  if (isSeries(r)) { s -= 1000; why.push('시리즈는 하루 한 편 따로'); }
   // 리메이크 규칙: 원본을 올린 지 이틀은 쉬었다가, 원본과 다른 각도일 때만, 원본이 약한 테마면 그 테마를 벗어났을 때만
   if (isRemake(r)) {
     const after = Date.parse(String(r.RemakeAfter || ''));
@@ -151,8 +154,17 @@ if (trendPick) {
   const blocked = rep || (!trendPick.isNew && !scored.some(function (x) { return x.row === trendPick.row && x.score >= 0; }));
   if (blocked) { console.log('지금 뜨는 주제 취소 → ' + (rep ? '최근 영상과 비슷함: ' + rep.head : '쓸 수 없는 주제')); trendPick = null; }
 }
+// ── 시리즈: 하루 한 편 (그날 첫 실행). 대기 중인 회차 중 Episode가 가장 작은 것 ──
+const today = $now.toFormat('yyyy-MM-dd');
+let seriesPick = null;
+if (sd.seriesDay !== today) {
+  const eps = pending.filter(function (r) { return isSeries(r) && statusOf(r) === 'pending'; })
+    .sort(function (a, b) { return (Number(a.Episode) || 99) - (Number(b.Episode) || 99) || (a.row_number || 0) - (b.row_number || 0); });
+  if (eps.length) seriesPick = { row: eps[0], score: 900, pillar: 'psychology', why: ['시리즈 ' + (eps[0].Series || '') + ' EP.' + (eps[0].Episode || '?')] };
+}
 let pick = scored[0];
-if (trendPick && !(pick && isRedo(pick.row))) pick = { row: trendPick.row, score: 999, pillar: trendPick.pillar, why: ['지금 뜨는 주제: ' + trendPick.note] };
+if (seriesPick && !(pick && isRedo(pick.row))) { pick = seriesPick; trendPick = null; sd.seriesDay = today; console.log('시리즈 → ' + seriesPick.why[0] + ' ' + head(seriesPick.row.Topic) + ' (남은 회차 ' + pending.filter(function (r) { return isSeries(r) && statusOf(r) === 'pending'; }).length + '편)'); }
+if (trendPick && !seriesPick && !(pick && isRedo(pick.row))) pick = { row: trendPick.row, score: 999, pillar: trendPick.pillar, why: ['지금 뜨는 주제: ' + trendPick.note] };
 if (!pick) throw new Error('pending 주제가 없습니다 — 시트에 주제를 추가하거나 Weekly Topic Generator를 실행하세요');
 if (pick.score < 0) throw new Error('쓸 수 있는 pending 주제가 없습니다 (남은 것이 전부 영어이거나 성경 주제 — 성경 주제는 Bible Shorts가 만듭니다)');
 

@@ -25,7 +25,7 @@ const fmt = n => n >= 10000 ? Math.round(n / 1000) / 10 + '만' : String(n);
 // 대기 중인 주제 (Pick Next Topic과 같은 기준: pending, 한글 제목, 성경 아님, 제작 중 아님)
 const BIBLE = /하나님|기도|말씀|예수|믿음|은혜|\d+:\d+/;
 const rows = $('Read Topic Sheet').all().map(i => i.json).filter(r => r && r.Topic);
-const cands = rows.filter(r => String(r.Status || '').trim().toLowerCase() === 'pending' && /[가-힣]/.test(String(r.Topic).split(' — ')[0]) && !BIBLE.test(r.Topic))
+const cands = rows.filter(r => String(r.Status || '').trim().toLowerCase() === 'pending' && /[가-힣]/.test(String(r.Topic).split(' — ')[0]) && !BIBLE.test(r.Topic) && String(r.Source || '').trim() !== 'series')
   .sort((a, b) => (b.row_number || 0) - (a.row_number || 0)).slice(0, MAX_CANDIDATES);
 const recent = rows.filter(r => r.Status === 'uploaded').slice(-40).map(r => String(r.Topic).split(' — ')[0]);
 // 우리 채널 성적 (Own Performance): 잘 된 영상·안 된 영상, 강한·약한 테마, 최근 14일 업로드
