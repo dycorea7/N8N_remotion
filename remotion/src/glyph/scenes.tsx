@@ -7,6 +7,7 @@ import { Center, P, Sfx, TEMPLATES, counterProgress, counterTiming, fmt, iconFor
 import { GlyphRaster, svgDataUrl } from './GlyphRaster';
 import { ArcText, DecodeText, MixedType, Typewriter } from './text';
 import { F, GlyphTheme, clamp01, easeOut, glyphFill, hash, neon } from './util';
+import { Media } from '../Media';
 
 type GP = P & { theme: GlyphTheme };
 
@@ -168,7 +169,7 @@ const ImageScene: React.FC<GP> = ({ scene, theme, lang, index, durationInFrames 
   return (
     <AbsoluteFill style={{ background: '#05040a' }}>
       <AbsoluteFill style={{ transform: `scale(${z})`, opacity: reveal }}>
-        <Img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.2) blur(1px)' }} />
+        <Media src={v.src} video={v.video} videoStart={v.videoStart} style={{ filter: 'saturate(1.2) blur(1px)' }} />
       </AbsoluteFill>
       <AbsoluteFill>
         <GlyphRaster src={src} width={width} height={height} cell={land ? 13 : 13} mode="color" start={0} assemble={26} zoom={[1.02, 1.1]} durationInFrames={durationInFrames} seed={index + 11} from={index % 2 ? 'below' : 'center'} threshold={0.06} />

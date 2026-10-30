@@ -442,7 +442,7 @@ const ImageScene: React.FC<P> = ({ scene, index, lang, durationInFrames }) => {
       <Center>
         <div style={{ position: 'relative', width: W, height: H }}>
           <RedDisc size={land ? 460 : 420} at={0} style={{ [right ? 'right' : 'left']: -110, top: -90 }} />
-          <Print src={v.src!} w={W} h={H} dur={durationInFrames} rot={right ? -1.6 : 1.4} at={2} seed={index + 1} from={right ? 'right' : 'left'} />
+          <Print src={v.src!} video={v.video} videoStart={v.videoStart} w={W} h={H} dur={durationInFrames} rot={right ? -1.6 : 1.4} at={2} seed={index + 1} from={right ? 'right' : 'left'} />
           {words.length > 0 && (
             <div style={{ position: 'absolute', left: right ? -20 : undefined, right: right ? undefined : -20, bottom: land ? 40 : 70, zIndex: 7 }}>
               <Strip at={12} seed={index + 9} rot={right ? -3 : 3} pad="6px 30px 12px">

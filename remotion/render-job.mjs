@@ -33,7 +33,7 @@ async function fetchBuf(url, maxBytes = 40e6) {
   throw new Error(`${url.slice(0, 120)} 다운로드 실패: ${lastErr.message}`);
 }
 
-const extOf = (url, fallback) => { const m = String(url).split('?')[0].match(/\.(jpe?g|png|webp|mp3|wav|m4a)$/i); return m ? m[0].toLowerCase() : fallback; };
+const extOf = (url, fallback) => { const m = String(url).split('?')[0].match(/\.(jpe?g|png|webp|mp3|wav|m4a|mp4|webm|mov)$/i); return m ? m[0].toLowerCase() : fallback; };
 
 const t0 = Date.now();
 const job = /^https?:\/\//.test(jobArg) ? JSON.parse((await fetchBuf(jobArg)).toString('utf8')) : JSON.parse(fs.readFileSync(jobArg, 'utf8'));
@@ -51,23 +51,24 @@ else if (job.audio_url) fs.writeFileSync(path.join(dir, 'voice.mp3'), await fetc
 else throw new Error('audio_base64 또는 audio_url이 필요합니다');
 
 // ── AI 이미지: 받아서 public에 두고 경로를 바꾼다. 실패한 장면은 headline으로 대체된다 ──
-let imgOk = 0, imgFail = 0;
+let imgOk = 0, imgFail = 0, clipOk = 0, clipFail = 0;
 await Promise.all((job.scenes || []).map(async (s, i) => {
   const v = s && s.visual;
   if (!v) return;
   // 이미지 장면(src)과 그래픽 장면의 사진 배경(bgSrc)
-  for (const key of ['src', 'bgSrc']) {
-    if (key === 'src' && v.type !== 'image') continue;
+  // 실사 영상(video)은 이미지 장면에만. src는 같은 영상의 정지 화면이라 영상을 못 받으면 사진 장면으로 남는다
+  for (const key of ['src', 'bgSrc', 'video']) {
+    if ((key === 'src' || key === 'video') && v.type !== 'image') { if (key === 'video') delete v.video; continue; }
     if (!/^https?:\/\//.test(String(v[key] || ''))) continue;
     try {
-      const name = `${key === 'src' ? 'img' : 'bg'}_${i}${extOf(v[key], '.jpg')}`;
-      fs.writeFileSync(path.join(dir, name), await fetchBuf(v[key], 20e6));
+      const name = `${key === 'src' ? 'img' : key === 'video' ? 'clip' : 'bg'}_${i}${extOf(v[key], key === 'video' ? '.mp4' : '.jpg')}`;
+      fs.writeFileSync(path.join(dir, name), await fetchBuf(v[key], key === 'video' ? 60e6 : 20e6));
       v[key] = `${rel}/${name}`;
-      imgOk++;
+      if (key === 'video') clipOk++; else imgOk++;
     } catch (e) {
-      warnings.push(`장면 ${i + 1} ${key === 'src' ? '이미지 실패 → 텍스트 장면으로 대체' : '사진 배경 실패 → 배경 없이'}: ${e.message}`);
+      warnings.push(`장면 ${i + 1} ${key === 'src' ? '이미지 실패 → 텍스트 장면으로 대체' : key === 'video' ? '실사 영상 실패 → 정지 화면으로' : '사진 배경 실패 → 배경 없이'}: ${e.message}`);
       delete v[key];
-      imgFail++;
+      if (key === 'video') clipFail++; else imgFail++;
     }
   }
 }));
@@ -97,7 +98,7 @@ if (job.music_url) {
 }
 
 // public 파일을 다 놓은 뒤에 번들해야 staticFile로 읽힌다
-console.log(`assets ready (${((Date.now() - t0) / 1000).toFixed(0)}s) — images ${imgOk} ok / ${imgFail} failed`);
+console.log(`assets ready (${((Date.now() - t0) / 1000).toFixed(0)}s) — images ${imgOk} ok / ${imgFail} failed, clips ${clipOk} ok / ${clipFail} failed`);
 const serveUrl = await bundle({ entryPoint: path.join(__dirname, 'src/index.ts'), publicDir: path.join(__dirname, 'public') });
 const composition = await selectComposition({ serveUrl, id: isLong ? 'Long' : 'Short', inputProps: props, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
 
@@ -158,6 +159,7 @@ const result = {
   chapters: props.chapters || [],
   thumbnail: thumbPath ? path.basename(thumbPath) : null,
   images: { ok: imgOk, failed: imgFail },
+  clips: { ok: clipOk, failed: clipFail },
   loudness,
   warnings,
 };

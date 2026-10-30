@@ -7,6 +7,7 @@ import { counterProgress, counterTiming, fmt, iconFor, revealFrames, spokenFrame
 import { Glass, GlassText, Photo } from './glass';
 import { Pill, Rise } from './parts';
 import { F, K, SP, clamp, easeInOut, easeOutCubic, fitLines, frameLayout, lerp, measure, pillRect } from './util';
+import { Media } from '../Media';
 
 export type CKey = { f: number; x: number; y: number; act?: 'click' | 'down' | 'up' };
 export type ZKey = { f: number; z: number; x: number; y: number };
@@ -517,7 +518,7 @@ const ImageScene: Tpl = {
       const prog = clamp((f - c.t0 - 40) / Math.max(1, c.outAt - c.t0 - 40));
       return (
         <>
-          <Photo src={src} W={c.W} H={c.H} />
+          {v.video ? <div style={{ position: 'absolute', left: 0, top: 0, width: c.W, height: c.H }}><Media video={v.video} videoStart={v.videoStart} /></div> : <Photo src={src} W={c.W} H={c.H} />}
           {g.tfit.lines.map((ln: string, i: number) => {
             const p = SP.pop(sec(f - c.t0 - 4 - i * 5, c.fps));
             return <div key={i} style={{ position: 'absolute', left: 0, top: 0, width: c.W, height: c.H, transform: `scale(${p})`, transformOrigin: `${c.W / 2}px ${y0 + i * lh + lh / 2}px` }}>
@@ -549,7 +550,8 @@ const ImageScene: Tpl = {
     const Adjust = iconFor('🎚️');
     return (
       <>
-        <Photo src={src} W={c.W} H={c.H} warmX={warmX} />
+        {/* 실사 영상이면 영상을 깔고, 해 질 녘 슬라이더 효과 대신 영상 위로 따뜻한 빛만 덮는다 (글래스 굴절은 정지 화면 기준) */}
+        {v.video ? <div style={{ position: 'absolute', left: 0, top: 0, width: c.W, height: c.H }}><Media video={v.video} videoStart={v.videoStart} />{warmX > 0 && <div style={{ position: 'absolute', left: 0, top: 0, width: warmX, height: c.H, background: 'rgba(255,150,60,0.18)', mixBlendMode: 'soft-light' }} />}</div> : <Photo src={src} W={c.W} H={c.H} warmX={warmX} />}
         {w > 4 && (
           <Glass src={src} x={c.W / 2 - w / 2} y={g.barY} w={w} h={g.barH} r={g.barH / 2} W={c.W} H={c.H} opts={{ frost: true, tint: [0.06, 0.06, 0.08, 0.3] }}>
             {ap > 0.9 && <>

@@ -5,6 +5,7 @@ import { resolveSrc } from './assets';
 import { Scene, Visual } from './types';
 import { SceneBg, hasBg } from './SceneBg';
 import { Theme, SANS_FONT } from './theme';
+import { Media } from './Media';
 
 export type P = { scene: Scene; theme: Theme; index: number; durationInFrames: number; lang: string; category?: string; overlap?: number };
 
@@ -332,7 +333,7 @@ const ImageScene: React.FC<P> = ({ scene, theme, lang, index, durationInFrames }
   return (
     <AbsoluteFill>
       <AbsoluteFill style={{ transform: `scale(${scale}) translate(${tx}px, ${ty}px)` }}>
-        <Img src={resolveSrc(v.src)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <Media src={v.src} video={v.video} videoStart={v.videoStart} />
       </AbsoluteFill>
       {/* 위: 키워드 가독성, 아래: 자막 가독성 */}
       <AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0.05) 52%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.72) 100%)' }} />

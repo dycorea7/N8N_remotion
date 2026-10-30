@@ -69,7 +69,10 @@ export function sanitizeVisual(v, narration) {
     const highlight = (Array.isArray(v.highlight) ? v.highlight : []).map(h => clean(h, 20)).filter(Boolean).slice(0, 2);
     const src = String(v.src || '');
     if (!/^(https?:\/\/|job\/)/.test(src)) return { type: 'headline', text: text || fallback.text, highlight, emoji: out.emoji };
-    return { type: 'image', src, text, highlight };
+    const out2 = { type: 'image', src, text, highlight };
+    // 실사 영상 (render-job이 받아 둔 경우만). 시작 지점은 0~20초 안으로
+    if (/^(https?:\/\/|job\/)/.test(String(v.video || ''))) { out2.video = String(v.video); out2.videoStart = Math.max(0, Math.min(20, Number(v.videoStart) || 0)); }
+    return out2;
   }
   if (t === 'chapter') {
     const title = clean(v.title || v.text, 40) || fallback.text;

@@ -7,6 +7,7 @@ import { Typewriter } from '../glyph/text';
 import { Mono, SplitFlap, Statement, TagCard, TrackBox } from './parts';
 import { codeFor } from './chrome';
 import { F, H, clamp01, easeOut, hash, pad2 } from './util';
+import { Media } from '../Media';
 
 const sizeFor = (len: number, lang: string) => lang === 'ko' ? (len > 22 ? 92 : len > 12 ? 112 : 132) : (len > 34 ? 84 : len > 18 ? 100 : 118);
 
@@ -365,7 +366,7 @@ const ImageScene: React.FC<P> = ({ scene, lang, index, durationInFrames }) => {
   return (
     <AbsoluteFill style={{ background: '#0b0b0c' }}>
       <AbsoluteFill style={{ transform: `scale(${z})` }}>
-        <Img src={resolveSrc(v.src)!} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'contrast(1.1) saturate(0.82) brightness(0.92)' }} />
+        <Media src={v.src} video={v.video} videoStart={v.videoStart} style={{ filter: 'contrast(1.1) saturate(0.82) brightness(0.92)' }} />
       </AbsoluteFill>
       {/* 필름 색: 그림자 청록, 밝은 곳 살짝 따뜻하게 */}
       <AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(20,40,50,0.25), rgba(40,25,10,0.12))', mixBlendMode: 'soft-light' }} />

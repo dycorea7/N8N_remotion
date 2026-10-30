@@ -53,11 +53,14 @@ function sanitizePrompt(text) {
   return out;
 }
 
+// 실사 영상(Pixabay)을 찾은 이미지 장면은 AI 그림을 만들지 않는다
+let footage = {};
+try { footage = $('Pick Footage').first().json.picks || {}; } catch (e) { /* 실사 영상 단계 없음 */ }
 const style = STYLES[p.category] || SHINKAI;
 const jobs = [];
 (p.scenes || []).forEach((s, i) => {
   const v = s.visual;
-  if (!v || v.type !== 'image') return;
+  if (!v || v.type !== 'image' || footage[i]) return;
   const scene = sanitizePrompt(v.prompt);
   if (scene.replace(/[^a-z]/gi, '').length < 15) return;
   jobs.push({ json: {
@@ -89,5 +92,5 @@ const BG_FRAME = 'simple uncluttered composition with soft calm areas, gentle de
   } });
 });
 
-console.log('image jobs: ' + jobs.length + ' (' + p.category + ')');
+console.log('image jobs: ' + jobs.length + ' (' + p.category + ') | 실사 영상 장면 ' + Object.keys(footage).length + '개');
 return jobs.length ? jobs : [{ json: { skip: true } }];

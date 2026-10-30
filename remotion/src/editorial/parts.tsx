@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Img, useCurrentFrame } from 'remotion';
 import { resolveSrc } from '../assets';
 import { C, F, arrowHead, clamp01, grain, handEllipse, handLine, pathLen, place, rnd, step, torn, tornLR } from './util';
+import { Media } from '../Media';
 
 /** 종이 결 + 가장자리 비네트 (화면 맨 위에 곱하기로) */
 export const Grain: React.FC<{ opacity?: number }> = ({ opacity = 0.32 }) => {
@@ -134,14 +135,14 @@ export const Tag: React.FC<{ text: string; at?: number; color?: string; ink?: st
 };
 
 /** 사진 인화지: 크림색 테두리 + 갈색 톤 + 천천히 확대 + 테이프 */
-export const Print: React.FC<{ src: string; w: number; h: number; dur: number; rot?: number; at?: number; seed?: number; from?: 'up' | 'down' | 'left' | 'right' | 'drop'; tape?: boolean; border?: number }> = ({ src, w, h, dur, rot = -2, at = 0, seed = 4, from = 'drop', tape = true, border = 18 }) => {
+export const Print: React.FC<{ src: string; video?: string; videoStart?: number; w: number; h: number; dur: number; rot?: number; at?: number; seed?: number; from?: 'up' | 'down' | 'left' | 'right' | 'drop'; tape?: boolean; border?: number }> = ({ src, video, videoStart, w, h, dur, rot = -2, at = 0, seed = 4, from = 'drop', tape = true, border = 18 }) => {
   const f = useCurrentFrame();
   const z = 1.04 + 0.08 * clamp01(f / Math.max(1, dur));
   return (
     <Paper w={w} h={h} color={C.card} seed={seed} edges="b" rot={rot} at={at} from={from} amp={6}>
       <div style={{ position: 'absolute', left: border, top: border, right: border, bottom: border * 1.6, overflow: 'hidden', background: C.ink }}>
         <div style={{ position: 'absolute', inset: 0, transform: `scale(${z})` }}>
-          <Img src={resolveSrc(src)!} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'sepia(0.32) saturate(0.78) contrast(1.08) brightness(1.02)' }} />
+          <Media src={src} video={video} videoStart={videoStart} style={{ filter: 'sepia(0.32) saturate(0.78) contrast(1.08) brightness(1.02)' }} />
         </div>
         {/* 인쇄 망점 */}
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(28,26,23,0.16) 1px, transparent 1.4px)', backgroundSize: '6px 6px', mixBlendMode: 'multiply' }} />

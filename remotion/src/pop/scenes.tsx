@@ -7,6 +7,7 @@ import { Center, P, Sfx, TEMPLATES, counterProgress, counterTiming, fmt, iconFor
 import { Typewriter } from '../glyph/text';
 import { BounceBall, GlitchSlices, Hit, Marquee, MorphShape, PARTICLE_LAND, ParticleKnot, ParticleTitle, ShapeGrid, StarEdges, Sunburst, Truchet, starClip } from './parts';
 import { BLOCKS, C, F, PALETTE, backOut, blockFor, clamp01, cubicBezier, easeOut, elastic, hash, inExpo, isLight, outExpo, pad2 } from './util';
+import { Media } from '../Media';
 
 /** 장면 종류별 배경 블록 [배경, 글자, 강조] — Short.tsx의 테두리 색도 이걸 본다 */
 export function blockOf(type: string, index: number): [string, string, string] {
@@ -453,7 +454,7 @@ const ImageScene: React.FC<P> = ({ scene, index, lang, durationInFrames }) => {
   const size = land ? 88 : lang === 'ko' ? 104 : 92;
   return (
     <AbsoluteFill style={{ background: C.night }}>
-      <AbsoluteFill style={{ transform: `scale(${z})` }}><Img src={resolveSrc(v.src)!} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.15) contrast(1.05)' }} /></AbsoluteFill>
+      <AbsoluteFill style={{ transform: `scale(${z})` }}><Media src={v.src} video={v.video} videoStart={v.videoStart} style={{ filter: 'saturate(1.15) contrast(1.05)' }} /></AbsoluteFill>
       <AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0) 35%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55))' }} />
       {words.length > 0 && (
         <div style={{ position: 'absolute', left: land ? 90 : 60, top: land ? 120 : 290, display: 'flex', flexWrap: 'wrap', gap: 14, maxWidth: land ? W * 0.55 : W - 120 }}>
