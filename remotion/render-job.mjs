@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { bundle } from '@remotion/bundler';
 import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
 import { prepare } from './lib/prepare.mjs';
+import { sliceLongJob } from './lib/slice.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const [, , jobArg, outArg] = process.argv;
@@ -36,7 +37,14 @@ async function fetchBuf(url, maxBytes = 40e6) {
 const extOf = (url, fallback) => { const m = String(url).split('?')[0].match(/\.(jpe?g|png|webp|mp3|wav|m4a|mp4|webm|mov)$/i); return m ? m[0].toLowerCase() : fallback; };
 
 const t0 = Date.now();
-const job = /^https?:\/\//.test(jobArg) ? JSON.parse((await fetchBuf(jobArg)).toString('utf8')) : JSON.parse(fs.readFileSync(jobArg, 'utf8'));
+let job = /^https?:\/\//.test(jobArg) ? JSON.parse((await fetchBuf(jobArg)).toString('utf8')) : JSON.parse(fs.readFileSync(jobArg, 'utf8'));
+// 롱폼 구간 쇼츠: { source_job_url, scene_from, scene_to } → 롱폼 작업에서 장면·정렬·음성을 잘라 세로 쇼츠 작업으로
+if (job.source_job_url) {
+  const srcUrl = String(job.source_job_url);
+  const srcJob = /^https?:\/\//.test(srcUrl) ? JSON.parse((await fetchBuf(srcUrl, 120e6)).toString('utf8')) : JSON.parse(fs.readFileSync(srcUrl, 'utf8'));
+  job = sliceLongJob(srcJob, job);
+  console.log(`롱폼 ${job.source.job_id} 장면 ${job.source.scene_from + 1}~${job.source.scene_to + 1} → 쇼츠 ${job.source.seconds}초 (정렬 일치 ${job.source.exact})`);
+}
 // 수동 재렌더용: 워크플로 입력 style이 있으면 job.json의 스타일을 덮어쓴다
 if (process.env.STYLE_OVERRIDE) job.style = String(process.env.STYLE_OVERRIDE).trim();
 const id = String(job.job_id || 'job').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || 'job';
@@ -49,6 +57,14 @@ const warnings = [];
 if (job.audio_base64) fs.writeFileSync(path.join(dir, 'voice.mp3'), Buffer.from(job.audio_base64, 'base64'));
 else if (job.audio_url) fs.writeFileSync(path.join(dir, 'voice.mp3'), await fetchBuf(job.audio_url));
 else throw new Error('audio_base64 또는 audio_url이 필요합니다');
+// 롱폼 구간 쇼츠: 나레이션을 그 구간만 자른다 (정렬 시각은 slice.mjs가 이미 0초 기준으로 옮겼다)
+if (job.audio_trim) {
+  const full = path.join(dir, 'voice_full.mp3');
+  fs.renameSync(path.join(dir, 'voice.mp3'), full);
+  const { start, end } = job.audio_trim;
+  const cut = spawnSync('ffmpeg', ['-hide_banner', '-nostdin', '-y', '-i', full, '-ss', String(start), '-to', String(end), '-c:a', 'libmp3lame', '-b:a', '192k', path.join(dir, 'voice.mp3')], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  if (cut.status !== 0) throw new Error('나레이션 자르기 실패: ' + String(cut.stderr || cut.error || '').slice(-300));
+}
 
 // ── AI 이미지: 받아서 public에 두고 경로를 바꾼다. 실패한 장면은 headline으로 대체된다 ──
 let imgOk = 0, imgFail = 0, clipOk = 0, clipFail = 0;
@@ -162,6 +178,7 @@ const result = {
   clips: { ok: clipOk, failed: clipFail },
   loudness,
   warnings,
+  source: job.source || null,
 };
 fs.writeFileSync(outArg + '.result.json', JSON.stringify(result));
 console.log(JSON.stringify(result));
