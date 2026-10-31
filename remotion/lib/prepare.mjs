@@ -51,7 +51,12 @@ export function chunkCaptions(words, lang, sceneBreaks) {
 /** 그래픽 장면 뒤 사진 배경: 받은 파일(job/...) 또는 URL일 때만 붙인다 */
 function withBg(out, v) {
   const src = String((v && v.bgSrc) || '');
-  if (out.type !== 'image' && out.type !== 'chapter' && /^(https?:\/\/|job\/)/.test(src)) out.bgSrc = src;
+  if (out.type !== 'image' && out.type !== 'chapter' && /^(https?:\/\/|job\/)/.test(src)) {
+    out.bgSrc = src;
+    // 그래픽 뒤 실사 영상 (bgSrc는 같은 영상의 정지 화면 — 유리 효과 등은 정지 화면을 쓴다)
+    const vid = String((v && v.bgVideo) || '');
+    if (/^(https?:\/\/|job\/)/.test(vid)) { out.bgVideo = vid; out.bgVideoStart = Math.max(0, Math.min(20, Number(v.bgVideoStart) || 0)); }
+  }
   return out;
 }
 function clean(v, n) { return String(v == null ? '' : v).trim().slice(0, n); }
@@ -157,6 +162,21 @@ export function prepare(req) {
   const sceneCharStarts = offsets.map(toAlignIdx);
 
   const words = wordsFromAlignment(chars, starts, ends);
+  // 자막 표기: TTS는 읽기용 문장(narration: 숫자를 한글로 풀어 씀)을 읽고, 자막은 표기용 문장(display: 63℃, 2큰술)을 보여 준다.
+  // n8n이 낱말 수를 같게 만들어 보내므로 장면 안에서 낱말 순서대로 바꿔 끼운다 (낱말 수가 다르면 그 장면은 읽기용 그대로)
+  if (exact) {
+    let wi = 0;
+    narrations.forEach((n, si) => {
+      const disp = String((scenesIn[si] && scenesIn[si].display) || '').trim();
+      const nTok = n.split(/\s+/).filter(Boolean);
+      const lo = offsets[si], hi = lo + n.length;
+      const sw = [];
+      while (wi < words.length && words[wi].charStart < hi) { if (words[wi].charStart >= lo) sw.push(words[wi]); wi++; }
+      if (!disp) return;
+      const dTok = disp.split(/\s+/).filter(Boolean);
+      if (dTok.length === nTok.length && sw.length === nTok.length) sw.forEach((w, k) => { w.text = dTok[k]; });
+    });
+  }
   const audioEnd = Math.max(...ends.filter(Number.isFinite));
   const duration = audioEnd + TAIL_SEC;
 

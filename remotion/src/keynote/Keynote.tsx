@@ -5,7 +5,7 @@
 import React, { useLayoutEffect, useMemo, useState } from 'react';
 import '@fontsource-variable/archivo/wdth.css';
 import '@fontsource-variable/geist/index.css';
-import { AbsoluteFill, Audio, continueRender, delayRender, interpolate, Sequence, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Audio, continueRender, delayRender, interpolate, OffthreadVideo, Sequence, useCurrentFrame, useVideoConfig } from 'remotion';
 import { resolveSrc } from '../assets';
 import { Sfx } from '../scenes';
 import { Caption, ShortProps } from '../types';
@@ -137,7 +137,10 @@ const KScene: React.FC<{ p: Plan; g: any; P: number; inF: number }> = ({ p, g, P
   const pillScale = p.kin === 'push' ? SP.pop((f - p.t0 + 6) / fps) : 1;
   return (
     <AbsoluteFill style={{ transform: x ? `translateX(${x}px)` : undefined, background: K.canvas, overflow: 'hidden' }}>
-      {p.bg && <Photo src={p.bg} W={W} H={H} />}
+      {p.bg && (p.c.scene.visual.bgVideo
+        // 그래픽 뒤 실사 영상: 화면을 채워 재생 (유리 패널은 같은 영상의 정지 화면으로 굴절을 그린다)
+        ? <OffthreadVideo src={resolveSrc(p.c.scene.visual.bgVideo)!} muted trimBefore={Math.max(0, Math.round((p.c.scene.visual.bgVideoStart || 0) * fps))} style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, objectFit: 'cover' }} />
+        : <Photo src={p.bg} W={W} H={H} />)}
       <T.View c={p.c} g={g} />
       {pr && <Pill x={pr.x} y={pr.y} w={pr.w} h={pr.h} label={pr.label} labelP={labelP} scale={pillScale} />}
     </AbsoluteFill>

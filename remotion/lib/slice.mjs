@@ -41,7 +41,7 @@ export function sliceLongJob(src, req) {
     const v = JSON.parse(JSON.stringify(s.visual || {}));
     // 챕터 표지는 쇼츠에서 의미가 없으니 같은 제목의 큰 글씨 장면으로
     const visual = v.type === 'chapter' ? { type: 'headline', text: String(v.title || v.text || '').slice(0, 40), highlight: [] } : v;
-    return { narration: narr[from + i], visual };
+    return { narration: narr[from + i], display: s.display, visual };
   });
   // 정확히 맞을 때만 잘라낸 문자들이 장면 narration과 같다 (아니면 prepare가 비율로 근사한다)
   const sliced = {

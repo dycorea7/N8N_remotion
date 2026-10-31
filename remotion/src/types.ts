@@ -8,7 +8,8 @@ export type Visual = {
   author?: string;
   left?: { label: string; text: string }; right?: { label: string; text: string };
   number?: number;
-  bgSrc?: string; // 그래픽 장면 뒤 AI 사진 배경
+  bgSrc?: string; // 그래픽 장면 뒤 AI 사진 배경 (실사 영상이면 그 정지 화면)
+  bgVideo?: string; bgVideoStart?: number; // 그래픽 장면 뒤 실사 영상
   video?: string; videoStart?: number; // 이미지 장면의 실사 영상 (src는 같은 영상의 정지 화면)
 };
 export type Scene = { start: number; end: number; narration: string; words: Word[]; visual: Visual; chapter?: number };

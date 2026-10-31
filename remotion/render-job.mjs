@@ -73,18 +73,21 @@ await Promise.all((job.scenes || []).map(async (s, i) => {
   if (!v) return;
   // 이미지 장면(src)과 그래픽 장면의 사진 배경(bgSrc)
   // 실사 영상(video)은 이미지 장면에만. src는 같은 영상의 정지 화면이라 영상을 못 받으면 사진 장면으로 남는다
-  for (const key of ['src', 'bgSrc', 'video']) {
+  for (const key of ['src', 'bgSrc', 'video', 'bgVideo']) {
     if ((key === 'src' || key === 'video') && v.type !== 'image') { if (key === 'video') delete v.video; continue; }
+    if (key === 'bgVideo' && (v.type === 'image' || !v.bgSrc)) { delete v.bgVideo; continue; }
     if (!/^https?:\/\//.test(String(v[key] || ''))) continue;
     try {
-      const name = `${key === 'src' ? 'img' : key === 'video' ? 'clip' : 'bg'}_${i}${extOf(v[key], key === 'video' ? '.mp4' : '.jpg')}`;
-      fs.writeFileSync(path.join(dir, name), await fetchBuf(v[key], key === 'video' ? 60e6 : 20e6));
+      const isVid = key === 'video' || key === 'bgVideo';
+      const name = `${key === 'src' ? 'img' : key === 'video' ? 'clip' : key === 'bgVideo' ? 'bgclip' : 'bg'}_${i}${extOf(v[key], isVid ? '.mp4' : '.jpg')}`;
+      fs.writeFileSync(path.join(dir, name), await fetchBuf(v[key], isVid ? 60e6 : 20e6));
       v[key] = `${rel}/${name}`;
-      if (key === 'video') clipOk++; else imgOk++;
+      if (isVid) clipOk++; else imgOk++;
     } catch (e) {
-      warnings.push(`장면 ${i + 1} ${key === 'src' ? '이미지 실패 → 텍스트 장면으로 대체' : key === 'video' ? '실사 영상 실패 → 정지 화면으로' : '사진 배경 실패 → 배경 없이'}: ${e.message}`);
+      warnings.push(`장면 ${i + 1} ${key === 'src' ? '이미지 실패 → 텍스트 장면으로 대체' : key === 'video' ? '실사 영상 실패 → 정지 화면으로' : key === 'bgVideo' ? '배경 실사 영상 실패 → 정지 화면으로' : '사진 배경 실패 → 배경 없이'}: ${e.message}`);
       delete v[key];
-      if (key === 'video') clipFail++; else imgFail++;
+      if (key === 'bgSrc') delete v.bgVideo;
+      if (key === 'video' || key === 'bgVideo') clipFail++; else imgFail++;
     }
   }
 }));
