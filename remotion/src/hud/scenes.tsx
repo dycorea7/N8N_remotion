@@ -436,7 +436,7 @@ export const HudSceneView: React.FC<P> = (p) => {
   return (
     <AbsoluteFill style={{ opacity: out }}>
       <AbsoluteFill style={{ transform: `scale(${1.05 - 0.05 * snap})` }}>
-        {hasBg(p.scene.visual) && <SceneBg src={p.scene.visual.bgSrc!} durationInFrames={p.durationInFrames} mode="paper" index={p.index} />}
+        {hasBg(p.scene.visual) && <SceneBg src={p.scene.visual.bgSrc!} video={p.scene.visual.bgVideo} videoStart={p.scene.visual.bgVideoStart} durationInFrames={p.durationInFrames} mode="paper" index={p.index} />}
         <T {...p} />
       </AbsoluteFill>
       {flash > 0 && <AbsoluteFill style={{ background: '#ffffff', opacity: flash * 0.55 }} />}

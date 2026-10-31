@@ -96,11 +96,11 @@ const GiantWords: React.FC<{ text: string; highlight?: string[]; color: string; 
 };
 
 /** 장면 배경 블록. 사진 배경(bgSrc)이 있으면 흑백 사진에 블록 색을 곱한 듀오톤으로 */
-const BgCtx = React.createContext<{ src?: string; dur: number; index: number }>({ dur: 150, index: 0 });
+const BgCtx = React.createContext<{ src?: string; video?: string; videoStart?: number; dur: number; index: number }>({ dur: 150, index: 0 });
 const Bg: React.FC<{ color: string; children?: React.ReactNode }> = ({ color, children }) => {
   const ctx = React.useContext(BgCtx);
   if (!ctx.src) return <AbsoluteFill style={{ background: color }}>{children}</AbsoluteFill>;
-  return <AbsoluteFill style={{ background: color }}><SceneBg src={ctx.src} durationInFrames={ctx.dur} mode="duotone" color={color} index={ctx.index} />{children}</AbsoluteFill>;
+  return <AbsoluteFill style={{ background: color }}><SceneBg src={ctx.src} video={ctx.video} videoStart={ctx.videoStart} durationInFrames={ctx.dur} mode="duotone" color={color} index={ctx.index} />{children}</AbsoluteFill>;
 };
 
 const Headline: React.FC<P> = ({ scene, index }) => {
@@ -541,7 +541,7 @@ export const PopSceneView: React.FC<P> = (p) => {
   const hits: number[] = p.index > 0 ? [0] : [];
   if (type === 'stat') hits.push(counterTiming(p.scene, v.value || 0, fps, p.durationInFrames).endF);
   if (type === 'outro') hits.push(PARTICLE_LAND);
-  const body = <BgCtx.Provider value={{ src: v.bgSrc && type !== 'image' && type !== 'chapter' ? v.bgSrc : undefined, dur: p.durationInFrames, index: p.index }}><T {...p} /></BgCtx.Provider>;
+  const body = <BgCtx.Provider value={{ src: v.bgSrc && type !== 'image' && type !== 'chapter' ? v.bgSrc : undefined, video: v.bgSrc && type !== 'image' && type !== 'chapter' ? v.bgVideo : undefined, videoStart: v.bgVideoStart, dur: p.durationInFrames, index: p.index }}><T {...p} /></BgCtx.Provider>;
   return (
     <AbsoluteFill style={{ clipPath: clip }}>
       <Hit hits={hits} amp={type === 'stat' || type === 'outro' ? 1.1 : 0.55}>

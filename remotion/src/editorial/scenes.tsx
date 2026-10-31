@@ -1,5 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, Img, useCurrentFrame, useVideoConfig } from 'remotion';
+import { Media } from '../Media';
 import { resolveSrc } from '../assets';
 import { Caption } from '../types';
 import { Center, P, Sfx, TEMPLATES, counterProgress, counterTiming, fmt, iconFor, revealFrames, useLandscape } from '../scenes';
@@ -11,7 +12,7 @@ const isHl = (w: string, hl: string[]) => { const c = w.replace(/[^\p{L}\p{N}%]/
 const hlList = (v: any) => (v.highlight || []).flatMap((h: string) => String(h).split(/\s+/)).filter(Boolean);
 
 /** 종이 배경. 사진 배경(bgSrc)이 있으면 바랜 신문 사진처럼 깔고 종이색으로 덮는다 */
-const BgCtx = React.createContext<{ src?: string; dur: number; index: number }>({ dur: 150, index: 0 });
+const BgCtx = React.createContext<{ src?: string; video?: string; videoStart?: number; dur: number; index: number }>({ dur: 150, index: 0 });
 const Bg: React.FC<{ grid?: boolean; tone?: string; children?: React.ReactNode }> = ({ grid, tone = C.paper, children }) => {
   const ctx = React.useContext(BgCtx);
   const f = useCurrentFrame();
@@ -20,7 +21,9 @@ const Bg: React.FC<{ grid?: boolean; tone?: string; children?: React.ReactNode }
     <AbsoluteFill style={{ background: tone }}>
       {ctx.src && (
         <AbsoluteFill style={{ overflow: 'hidden' }}>
-          <AbsoluteFill style={{ transform: `scale(${z})` }}><Img src={resolveSrc(ctx.src)!} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) sepia(0.45) contrast(1.15)' }} /></AbsoluteFill>
+          <AbsoluteFill style={{ transform: `scale(${z})` }}>{ctx.video
+            ? <Media video={ctx.video} videoStart={ctx.videoStart} style={{ filter: 'grayscale(1) sepia(0.45) contrast(1.15)' }} />
+            : <Img src={resolveSrc(ctx.src)!} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) sepia(0.45) contrast(1.15)' }} />}</AbsoluteFill>
           <AbsoluteFill style={{ backgroundImage: 'radial-gradient(rgba(28,26,23,0.35) 1px, transparent 1.6px)', backgroundSize: '7px 7px', mixBlendMode: 'multiply' }} />
           <AbsoluteFill style={{ background: tone, opacity: 0.8 }} />
         </AbsoluteFill>
@@ -527,7 +530,7 @@ export const EditorialSceneView: React.FC<P> = (p) => {
   if (kind === 'slide' && w < 1) style = { transform: `translateY(${(1 - place(w)) * 100}%) rotate(${(1 - w) * 2}deg)`, boxShadow: '0 -20px 40px rgba(40,28,14,0.3)' };
   return (
     <AbsoluteFill style={style}>
-      <BgCtx.Provider value={{ src: v.bgSrc && type !== 'image' && type !== 'chapter' ? v.bgSrc : undefined, dur: p.durationInFrames, index: p.index }}><T {...p} /></BgCtx.Provider>
+      <BgCtx.Provider value={{ src: v.bgSrc && type !== 'image' && type !== 'chapter' ? v.bgSrc : undefined, video: v.bgSrc && type !== 'image' && type !== 'chapter' ? v.bgVideo : undefined, videoStart: v.bgVideoStart, dur: p.durationInFrames, index: p.index }}><T {...p} /></BgCtx.Provider>
       {p.index > 0 && <Sfx name="whoosh" at={0} volume={0.12} />}
     </AbsoluteFill>
   );

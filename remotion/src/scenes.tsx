@@ -510,7 +510,7 @@ export const SceneView: React.FC<P> = (p) => {
   const whoosh = p.index > 0 && type !== 'chapter' && type !== 'scripture';
   return (
     <AbsoluteFill style={{ opacity: fadeIn * out, transform, filter, clipPath }}>
-      {hasBg(p.scene.visual) && <SceneBg src={p.scene.visual.bgSrc!} durationInFrames={p.durationInFrames} mode="dark" index={p.index} />}
+      {hasBg(p.scene.visual) && <SceneBg src={p.scene.visual.bgSrc!} video={p.scene.visual.bgVideo} videoStart={p.scene.visual.bgVideoStart} durationInFrames={p.durationInFrames} mode="dark" index={p.index} />}
       <T {...p} />
       {whoosh && <Sfx name="whoosh" at={0} volume={isImage || hasBg(p.scene.visual) ? 0.2 : 0.13} />}
     </AbsoluteFill>

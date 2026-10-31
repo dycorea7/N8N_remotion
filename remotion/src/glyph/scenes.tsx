@@ -258,7 +258,7 @@ export const GlyphSceneView: React.FC<GP> = (p) => {
   const whoosh = p.index > 0 && type !== 'chapter' && type !== 'scripture';
   return (
     <AbsoluteFill style={{ opacity: opacity * out, transform: isImage ? undefined : transform, filter: isImage && kind !== 'glitch' ? undefined : filter }}>
-      {hasBg(p.scene.visual) && <SceneBg src={p.scene.visual.bgSrc!} durationInFrames={p.durationInFrames} mode="dark" index={p.index} />}
+      {hasBg(p.scene.visual) && <SceneBg src={p.scene.visual.bgSrc!} video={p.scene.visual.bgVideo} videoStart={p.scene.visual.bgVideoStart} durationInFrames={p.durationInFrames} mode="dark" index={p.index} />}
       <T {...p} />
       {whoosh && <Sfx name="whoosh" at={0} volume={isImage ? 0.2 : 0.13} />}
     </AbsoluteFill>
