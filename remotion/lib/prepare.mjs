@@ -77,6 +77,8 @@ export function sanitizeVisual(v, narration) {
     const out2 = { type: 'image', src, text, highlight };
     // 실사 영상 (render-job이 받아 둔 경우만). 시작 지점은 0~20초 안으로
     if (/^(https?:\/\/|job\/)/.test(String(v.video || ''))) { out2.video = String(v.video); out2.videoStart = Math.max(0, Math.min(20, Number(v.videoStart) || 0)); }
+    // 레시피: 슬라이더(밝기 조절) 연출 없이 사진·영상만
+    if (v.plain) out2.plain = true;
     return out2;
   }
   if (t === 'chapter') {

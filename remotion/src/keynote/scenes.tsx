@@ -503,6 +503,8 @@ const ImageScene: Tpl = {
     const zooms: ZKey[] = lock ? [{ f: c.t0 + 4, z: 1.06, x: c.W / 2, y: c.H * 0.4 }, { f: c.outAt - 14, z: 1, x: c.W / 2, y: c.H / 2 }]
       : [{ f: clickF - 6, z: 1.1, x: c.W / 2, y: ky }, { f: dragB + 6, z: 1, x: c.W / 2, y: c.H / 2 }];
     const tfit = lock ? fitLines(v.text || '', L.colW, L.land ? [230, 200, 170, 140] : [210, 180, 150, 124, 104], 800, 2) : null;
+    // visual.plain (레시피): 툴바→슬라이더(밝기 조절처럼 보이는 연출) 없이 사진·영상만, 키워드는 글래스 띠로
+    if (v.plain && !lock) return { keys: [], zooms: [{ f: c.t0 + 4, z: 1.04, x: c.W / 2, y: c.H / 2 }, { f: c.outAt - 14, z: 1, x: c.W / 2, y: c.H / 2 }], plain: true, lock, barW, barH, barX, barY, tfit };
     return { keys, zooms, lock, barW, barH, barX, barY, clickF, dragA, dragB, trackX, trackW, ky, tfit };
   },
   View: ({ c, g }) => {
@@ -534,6 +536,20 @@ const ImageScene: Tpl = {
                   <div style={{ position: 'absolute', left: 40, right: 40, bottom: 22, height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.3)' }}><div style={{ width: `${prog * 100}%`, height: '100%', borderRadius: 4, background: K.white }} /></div>
                 </>}
               </Glass>}
+        </>
+      );
+    }
+    if (g.plain) {
+      const ap = SP.pop(sec(f - c.t0 - 8, c.fps));
+      const w = g.barW * ap;
+      return (
+        <>
+          {v.video ? <div style={{ position: 'absolute', left: 0, top: 0, width: c.W, height: c.H }}><Media video={v.video} videoStart={v.videoStart} /></div> : <Photo src={src} W={c.W} H={c.H} />}
+          {v.text && w > 4 && (
+            <Glass src={src} x={c.W / 2 - w / 2} y={g.barY} w={w} h={g.barH} r={g.barH / 2} W={c.W} H={c.H} opts={{ frost: true, tint: [0.06, 0.06, 0.08, 0.3] }}>
+              {ap > 0.9 && <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: g.barH, display: 'flex', alignItems: 'center', justifyContent: 'center', font: KO_FONT(800, 52), color: K.white, whiteSpace: 'nowrap' }}>{v.text}</div>}
+            </Glass>
+          )}
         </>
       );
     }
