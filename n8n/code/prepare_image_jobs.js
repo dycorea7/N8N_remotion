@@ -53,7 +53,7 @@ function sanitizePrompt(text) {
   return out;
 }
 
-// 실사 영상(Pixabay)을 찾은 이미지 장면은 AI 그림을 만들지 않는다
+// 실사 영상(Pixabay)이 통과한 장면(이미지 장면·그래픽 뒤 배경)은 AI 그림을 만들지 않는다
 let footage = {};
 try { footage = $('Pick Footage').first().json.picks || {}; } catch (e) { /* 실사 영상 단계 없음 */ }
 const style = STYLES[p.category] || SHINKAI;
@@ -78,7 +78,7 @@ const jobs = [];
 const BG_FRAME = 'simple uncluttered composition with soft calm areas, gentle depth of field, works as a background behind on-screen graphics';
 (p.scenes || []).forEach((s, i) => {
   const v = s.visual;
-  if (!v || v.type === 'image' || !v.bg) return;
+  if (!v || v.type === 'image' || !v.bg || footage[i]) return;
   const scene = sanitizePrompt(v.bg);
   if (scene.replace(/[^a-z]/gi, '').length < 15) return;
   jobs.push({ json: {

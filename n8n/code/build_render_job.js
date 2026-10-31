@@ -46,19 +46,29 @@ reqs.forEach((r, k) => {
 // 실사 영상(Pixabay): 영상 + 같은 영상의 정지 화면(src). 렌더러가 영상을 못 받으면 정지 화면으로 남는다
 let footage = {};
 try { footage = $('Pick Footage').first().json.picks || {}; } catch (e) { /* 실사 영상 단계 없음 */ }
-let clips = 0;
+let clips = 0, bgClips = 0;
 Object.keys(footage).forEach(k => {
   const s = scenes[Number(k)], f = footage[k];
-  if (!s || !s.visual || s.visual.type !== 'image' || !f.video) return;
+  if (!s || !s.visual || !f.video) return;
+  // 그래픽 장면: 그 뒤 배경으로 실사 영상(bgVideo) + 정지 화면(bgSrc)
+  if (f.kind === 'bg') {
+    if (s.visual.type === 'image' || s.visual.type === 'outro') return;
+    s.visual.bgVideo = f.video; s.visual.bgVideoStart = f.videoStart || 0;
+    if (!s.visual.bgSrc) s.visual.bgSrc = f.poster;
+    bgClips++;
+    return;
+  }
+  if (s.visual.type !== 'image') return;
   s.visual.video = f.video; s.visual.videoStart = f.videoStart || 0;
   if (!s.visual.src) s.visual.src = f.poster;
   clips++;
 });
-for (const s of scenes) if (s.visual) { delete s.visual.prompt; delete s.visual.bg; delete s.visual.footage; } // 렌더러에는 필요 없음
+for (const s of scenes) if (s.visual) { delete s.visual.prompt; delete s.visual.bg; delete s.visual.footage; delete s.visual.bgFootage; } // 렌더러에는 필요 없음
+const textOnly = scenes.filter(s => { const v = s.visual || {}; return !['image', 'outro'].includes(v.type) && !v.bgSrc; }).length;
 // 처음-끝 이어짐: 마지막 장면 뒤에 첫 장면 그림을 깔아, 쇼츠가 다시 시작될 때 화면이 끊기지 않고 이어지게 한다
 const firstV = scenes[0] && scenes[0].visual, lastV = scenes.length > 1 && scenes[scenes.length - 1].visual;
 const firstPic = firstV && (firstV.type === 'image' ? firstV.src : firstV.bgSrc);
-if (lastV && firstPic && lastV.type !== 'image') lastV.bgSrc = firstPic;
+if (lastV && firstPic && lastV.type !== 'image') { lastV.bgSrc = firstPic; delete lastV.bgVideo; }
 
 // ── 배경음악: 드라이브 라이브러리에서 무드에 맞는 곡 하나 ──
 let musicUrl = '', musicName = 'none';
@@ -83,10 +93,10 @@ const job = {
   music_url: musicUrl, music_volume: MUSIC_VOLUME, style: pickStyle(p)
 };
 const text = JSON.stringify(job);
-console.log('job ' + jobId + ' | style ' + job.style + ' (fit ' + (p.styleFit || '-') + ') | ' + Math.round(text.length / 1024) + 'KB | images ' + imagesOk + ' ok / ' + imagesFailed + ' failed | music: ' + musicName);
+console.log('job ' + jobId + ' | style ' + job.style + ' (fit ' + (p.styleFit || '-') + ') | ' + Math.round(text.length / 1024) + 'KB | 실사 영상 ' + clips + ' + 그래픽 뒤 ' + bgClips + ' | AI 그림 ' + imagesOk + ' ok / ' + imagesFailed + ' failed | 글씨만 나오는 장면 ' + textOnly + ' | music: ' + musicName);
 if (failures.length) console.log('image failures: ' + failures.join(' | '));
 
 return [{
-  json: { jobId, repo: GITHUB_REPO, branch: GITHUB_BRANCH, imagesOk, imagesFailed, clips, musicName, sceneTypes: scenes.map(s => s.visual && s.visual.video ? 'video' : s.visual && s.visual.src ? 'image' : (s.visual && s.visual.type === 'image' ? 'headline' : s.visual && s.visual.type)).join(' → ') },
+  json: { jobId, repo: GITHUB_REPO, branch: GITHUB_BRANCH, imagesOk, imagesFailed, clips: clips + bgClips, textOnly, musicName, sceneTypes: scenes.map(s => s.visual && s.visual.video ? 'video' : s.visual && s.visual.src ? 'image' : (s.visual && s.visual.type === 'image' ? 'headline' : s.visual && s.visual.type)).join(' → ') },
   binary: { data: { data: Buffer.from(text, 'utf8').toString('base64'), mimeType: 'application/json', fileName: jobId + '.json' } }
 }];
