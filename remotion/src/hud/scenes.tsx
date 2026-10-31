@@ -86,7 +86,8 @@ const Headline: React.FC<P> = ({ scene, lang, category, index }) => {
   }
   // 첫 장면: 강조 단어를 화면 폭을 넘치게 크게 (참고 영상의 'BACK!' 'PROOFS')
   const hero = index === 0 ? ((v.highlight && v.highlight[0]) || text.split(/\s+/)[0] || '') : '';
-  const heroE = easeOut(frame / 14);
+  // 첫 장면(훅)은 첫 프레임부터 큰 글자가 거의 다 보이게 (피드에서 1초 안에 읽혀야 한다)
+  const heroE = easeOut((frame + 9) / 12);
   return (
     <Center>
       {hero && (
@@ -97,7 +98,7 @@ const Headline: React.FC<P> = ({ scene, lang, category, index }) => {
         <Kick text={codeFor(v.type, index)} />
         {hero && hero.replace(/\s+/g, '') === text.replace(/\s+/g, '')
           ? <div style={{ display: 'flex', alignItems: 'center', gap: 20, opacity: easeOut((frame - 12) / 10) }}><div style={{ width: 120, height: 10, background: H.accent }} /><Mono size={30} color={H.ink}>KEY PHRASE · {pad2(text.length)} CHR</Mono></div>
-          : <Statement text={text} highlight={v.highlight} size={sizeFor(text.length, lang)} start={hero ? 10 : 4} maxWidth={land ? 1500 : 940} />}
+          : <Statement text={text} highlight={v.highlight} size={sizeFor(text.length, lang)} start={hero ? 2 : 4} maxWidth={land ? 1500 : 940} />}
         {v.emoji && !hero && <div style={{ marginTop: 60, alignSelf: 'flex-end' }}><Diagram emoji={v.emoji} category={category} size={260} start={10} /></div>}
       </Block>
     </Center>

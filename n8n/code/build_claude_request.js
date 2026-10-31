@@ -8,8 +8,8 @@ const language = $json.Language || 'Korean';
 const isKorean = String(language).trim().toLowerCase() === 'korean';
 
 const lengthRule = isKorean
-  ? 'The full narration (all scene narrations together) must be between 250 and 320 Korean characters including spaces (~35 to 40 seconds spoken). Shorter Shorts are watched to the end more often; under 250 is too thin, over 320 is a failure.'
-  : 'The full narration (all scene narrations together) must be between 100 and 135 English words (~35 to 40 seconds spoken). Under 100 is too thin; over 135 is a failure.';
+  ? 'The full narration (all scene narrations together) must be between 170 and 220 Korean characters including spaces (about 25 to 32 seconds with our voice). Count them. Our recent Shorts ran 50 to 80 seconds and viewers left in the first seconds; shorter Shorts are watched to the end and replayed. Over 220 is a failure - cut a point rather than squeeze.'
+  : 'The full narration (all scene narrations together) must be between 70 and 95 English words (about 25 to 32 seconds). Over 95 is a failure - cut a point rather than squeeze.';
 
 const seed = Math.floor(Date.now() / 86400000) + (Number($json.row_number) || 0);
 
@@ -80,6 +80,8 @@ FACTS (hard rule): after you write, every quotation, number, study, named-person
 
 === THE FIRST TWO SECONDS DECIDE EVERYTHING ===
 The first narration line must be under 12 words, open mid-tension or mid-claim, and create an information gap.
+HOOK SCENE (hard rule - our viewers leave within 5 seconds): scene 1 narration is ONE short sentence of at most 20 Korean characters / 8 English words, spoken in about 1.5 seconds. It is a definite, surprising claim or the payoff itself - never hedged (no ~일 수 있어요, ~일지도, ~아닐까요, ~할 수도 in scene 1). Good: 열심히 할수록 지치는 건 방향 탓이에요. Bad: 열심히 할수록 더 지치는 사람, 문제는 노력량이 아닐 수 있어요.
+FIRST 5 SECONDS: scenes 2 and 3 are also one short sentence each (at most 25 Korean characters), so the picture changes about every 1.5 to 2 seconds at the start. By scene 3 there is a strong visual switch - real footage (image with footage) or a stat counter - not two text cards in a row.
 BANNED openings: 지금 마음이 힘드신가요, 힘드신가요, 지치셨나요, 사랑하는 여러분, 오늘도 수고하셨습니다, 혹시 〇〇한 적 있나요, Are you struggling, Have you ever, Let me tell you, In this video.
 
 === BUILT FOR THE SHORTS FEED (how YouTube decides to push a Short) ===
@@ -104,9 +106,9 @@ Only quotes genuinely and widely attributed. Facts and figures accurate and main
 For the ending: ${closing}.
 
 === STEP 3: SCENES (this is the motion design) ===
-Split the narration into 10 to 12 scenes, in order (a new visual every 2 to 4 seconds). Each scene = { "narration": the exact words spoken during it (one or two sentences), "visual": what is on screen }.
+Split the narration into 8 to 10 scenes, in order (a new visual every 1.5 to 3 seconds). Each scene = { "narration": the exact words spoken during it (one or two sentences), "visual": what is on screen }.
 Joining every narration with a line break must give the complete script - nothing spoken outside scenes. Narration is spoken text only: no stage directions, no emoji, no brackets.
-Each scene lasts while its narration is spoken (about 2-4 seconds), so the visual must be readable at a glance.
+Each scene lasts while its narration is spoken (about 1.5-3 seconds; never more than 4), so the visual must be readable at a glance.
 
 The narration already appears as captions, so on-screen text must NOT repeat the narration. It is the headline a designer would pull out: the key phrase, number, or contrast, short and punchy.
 

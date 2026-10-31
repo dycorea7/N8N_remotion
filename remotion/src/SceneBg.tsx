@@ -16,7 +16,7 @@ export const SceneBg: React.FC<{ src: string; video?: string; videoStart?: numbe
   const p = interpolate(frame, [0, durationInFrames], [0, 1], { extrapolateRight: 'clamp' });
   const zoomIn = index % 2 === 0;
   const scale = video ? 1.02 + 0.03 * p : zoomIn ? 1.06 + 0.08 * p : 1.14 - 0.08 * p;
-  const filter = mode === 'duotone' ? 'grayscale(1) contrast(1.25) brightness(1.05)' : mode === 'paper' ? 'saturate(0.7) contrast(1.05)' : 'saturate(1.05)';
+  const filter = mode === 'duotone' ? 'grayscale(1) contrast(1.25) brightness(1.05)' : mode === 'paper' ? 'saturate(1.05) contrast(1.08)' : 'saturate(1.05)';
   return (
     <AbsoluteFill style={{ overflow: 'hidden' }}>
       <AbsoluteFill style={{ transform: `scale(${scale})` }}>
@@ -25,7 +25,10 @@ export const SceneBg: React.FC<{ src: string; video?: string; videoStart?: numbe
           : <Img src={resolveSrc(src)!} style={{ width: '100%', height: '100%', objectFit: 'cover', filter }} />}
       </AbsoluteFill>
       {mode === 'dark' && <AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.45) 40%, rgba(0,0,0,0.55) 65%, rgba(0,0,0,0.78) 100%)' }} />}
-      {mode === 'paper' && <AbsoluteFill style={{ background: 'rgba(236,235,230,0.72)', backdropFilter: 'blur(2px)' }} />}
+      {/* 종이 막은 글자가 있는 위쪽만 진하게, 아래로 갈수록 옅게 — 사진·영상이 회색으로 바래 보이지 않게 (첫 장면은 더 옅게) */}
+      {mode === 'paper' && <AbsoluteFill style={{ background: index === 0
+        ? 'linear-gradient(180deg, rgba(236,235,230,0.78) 0%, rgba(236,235,230,0.62) 40%, rgba(236,235,230,0.18) 68%, rgba(236,235,230,0.05) 100%)'
+        : 'linear-gradient(180deg, rgba(236,235,230,0.82) 0%, rgba(236,235,230,0.7) 45%, rgba(236,235,230,0.3) 72%, rgba(236,235,230,0.12) 100%)' }} />}
       {mode === 'duotone' && !darkColor && <AbsoluteFill style={{ background: color, mixBlendMode: 'multiply', opacity: 0.92 }} />}
       {mode === 'duotone' && <AbsoluteFill style={{ background: color, opacity: darkColor ? 0.72 : 0.35 }} />}
     </AbsoluteFill>
