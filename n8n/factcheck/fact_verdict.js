@@ -15,11 +15,11 @@ try {
   const ko = /[가-힣]/.test(nar.join(''));
   const size = x => ko ? x.length : x.split(/\s+/).filter(Boolean).length;
   const total = size(nar.join(' '));
-  if (total > (ko ? 235 : 100)) lenIssues.push('The narration is ' + total + (ko ? ' characters' : ' words') + ' long. It must be ' + (ko ? '170 to 220 Korean characters' : '70 to 95 words') + ' (about 25 to 32 seconds): cut whole points or scenes, keep the hook, the payoff and the loop ending.');
+  if (total > (ko ? 335 : 145)) lenIssues.push('The narration is ' + total + (ko ? ' characters' : ' words') + ' long. It must be ' + (ko ? '250 to 320 Korean characters' : '100 to 135 words') + ' (about 35 to 40 seconds): cut whole points or scenes, keep the hook, the payoff and the loop ending.');
   const h = nar[0] || '';
   if (size(h) > (ko ? 24 : 9)) lenIssues.push('Scene 1 narration is too long (' + size(h) + (ko ? ' characters' : ' words') + '). Make it ONE short definite sentence of at most 20 Korean characters / 8 English words.');
   if (ko && /수 있어요|수 있습니다|일지도|아닐까요|할 수도|일 수도/.test(h)) lenIssues.push('Scene 1 is hedged (' + h + '). Make it a definite, surprising claim.');
-  if (nar.length > 11) lenIssues.push('There are ' + nar.length + ' scenes; use 8 to 10.');
+  if (nar.length > 13) lenIssues.push('There are ' + nar.length + ' scenes; use 10 to 12.');
   console.log('길이 점검: ' + total + (ko ? '자' : ' words') + ', 첫 장면 ' + size(h) + ', 장면 ' + nar.length + '개' + (lenIssues.length ? ' → 줄이기' : ' → 통과'));
 } catch (e) { console.log('길이 점검 실패: ' + e.message); }
 const lengthFix = lenIssues.length ? '\n\nThe script is also too long or its opening is too weak:\n' + lenIssues.map(x => '- ' + x).join('\n') + '\nFix these too.' : '';
