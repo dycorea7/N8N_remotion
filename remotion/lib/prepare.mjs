@@ -88,7 +88,7 @@ export function sanitizeVisual(v, narration) {
   if (t === 'headline' || t === 'icon' || t === 'outro') {
     out.text = clean(v.text, 48) || fallback.text;
     out.highlight = (Array.isArray(v.highlight) ? v.highlight : []).map(h => clean(h, 20)).filter(Boolean).slice(0, 3);
-    if (t === 'outro') out.cta = clean(v.cta, 24);
+    if (t === 'outro') { const c = String(v.cta == null ? '' : v.cta).replace(/\p{Extended_Pictographic}\uFE0F?/gu, '').replace(/\s+/g, ' ').trim(); out.cta = c.length <= 30 ? c : (c.slice(0, 30).replace(/\s+\S*$/, '') || c.slice(0, 30)); } // 다음 화 예고가 단어 중간에서 잘리지 않게
     if (t === 'icon' && !out.emoji) return { ...fallback, text: out.text };
     return out;
   }

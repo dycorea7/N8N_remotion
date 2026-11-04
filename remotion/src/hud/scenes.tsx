@@ -392,13 +392,19 @@ const ImageScene: React.FC<P> = ({ scene, lang, index, durationInFrames }) => {
 const Outro: React.FC<P> = ({ scene, lang, index, category }) => {
   const v = scene.visual;
   const land = useLandscape();
-  const cta = v.cta || '';
+  const frame = useCurrentFrame();
+  // 이모지는 빼고, 글자판(영문·숫자만 돌아감)에 맞는 짧은 영문 문구만 글자판으로. 한글·긴 문구(다음 화 예고 등)는 잘리지 않게 일반 글로
+  const cta = String(v.cta || '').replace(/\p{Extended_Pictographic}\uFE0F?/gu, '').replace(/\s+/g, ' ').trim();
+  const flapCta = cta.length <= (land ? 18 : 10) && /^[A-Za-z0-9 #%.:!?-]+$/.test(cta);
   return (
     <Center>
       <Block>
         <Kick text={`END OF SHOW · ${pad2(index + 1)}`} />
         <Statement text={v.text || ''} highlight={v.highlight} size={lang === 'ko' ? 112 : 100} start={4} />
-        {cta && <div style={{ marginTop: 70 }}><SplitFlap text={cta.replace(/\s+/g, ' ').slice(0, land ? 18 : 10)} start={18} size={land ? 86 : 78} stagger={2} spin={8} light /></div>}
+        {cta && flapCta && <div style={{ marginTop: 70 }}><SplitFlap text={cta.toUpperCase()} start={18} size={land ? 86 : 78} stagger={2} spin={8} light /></div>}
+        {cta && !flapCta && (
+          <div style={{ marginTop: 60, maxWidth: 940, paddingLeft: 26, borderLeft: `8px solid ${H.accent}`, opacity: clamp01((frame - 12) / 8), transform: `translateY(${(1 - easeOut(clamp01((frame - 12) / 10))) * 24}px)`, fontFamily: F.sans, fontWeight: 800, fontSize: lang === 'ko' ? (cta.length > 24 ? 52 : 62) : 56, lineHeight: 1.22, letterSpacing: -1, color: H.ink, wordBreak: 'keep-all' }}>{cta}</div>
+        )}
         <div style={{ marginTop: 50, alignSelf: 'flex-end' }}><Diagram emoji={v.emoji} category={category} size={220} start={10} /></div>
       </Block>
       <Sfx name="swell" at={0} volume={0.22} />

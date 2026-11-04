@@ -15,7 +15,7 @@ function safetyFor(scene) {
 const FRAME = 'upright tall vertical portrait composition with a level horizon, main subject in the middle third, calm empty space at top and bottom';
 const SHINKAI = {
   prefix: 'An anime style illustration inspired by Makoto Shinkai',
-  suffix: 'massive detailed cumulonimbus clouds, vibrant gradient sky, cinematic lighting, hyper-detailed background, emotional lighting, nostalgic ambiance, masterpiece'
+  suffix: 'rich hyper-detailed background true to the described place and time of day, cinematic lighting, vivid natural colour, emotional atmosphere, masterpiece'
 };
 const STYLES = {
   bible: {

@@ -1,5 +1,9 @@
 // [롱폼] image 장면마다 fal.ai 요청 1건 + 썸네일 1건(sceneIndex -1). 16:9.
 const p = $('Parse Longform Script').first().json;
+// 실사 영상(Pixabay)이 통과한 장면은 AI 그림을 만들지 않는다. AI 그림 최대 장수 (썸네일 제외)
+const MAX_AI = 100;
+let footage = {};
+try { footage = $('Pick Footage').first().json.picks || {}; } catch (e) {}
 
 // 화풍은 카테고리로 정한다 (v2와 같은 톤). 프롬프트에는 장면 내용만 있고, 여기서 화풍을 붙인다.
 // 애니풍은 인물이 어려 보이기 쉬워서 성인임을 분명히 적는다. 교복류는 금지.
@@ -16,7 +20,7 @@ const FRAME = 'upright wide cinematic 16:9 landscape composition with a level ho
 const THUMB_FRAME = 'wide 16:9 landscape composition, one striking subject on the right half, simple darker background on the left half, high contrast, vivid';
 const SHINKAI = {
   prefix: 'An anime style illustration inspired by Makoto Shinkai',
-  suffix: 'massive detailed cumulonimbus clouds, vibrant gradient sky, cinematic lighting, hyper-detailed background, emotional lighting, nostalgic ambiance, masterpiece'
+  suffix: 'rich hyper-detailed background true to the described place and time of day, cinematic lighting, vivid natural colour, emotional atmosphere, masterpiece'
 };
 const STYLES = {
   bible: {
@@ -58,7 +62,7 @@ const style = STYLES[p.category] || SHINKAI;
 const jobs = [];
 (p.scenes || []).forEach((s, i) => {
   const v = s.visual;
-  if (!v || v.type !== 'image') return;
+  if (!v || v.type !== 'image' || footage[i] || jobs.length >= MAX_AI) return;
   const scene = sanitizePrompt(v.prompt);
   if (scene.replace(/[^a-z]/gi, '').length < 15) return;
   jobs.push({ json: {
@@ -76,7 +80,7 @@ const jobs = [];
 const BG_FRAME = 'simple uncluttered composition with soft calm areas, gentle depth of field, works as a background behind on-screen graphics';
 (p.scenes || []).forEach((s, i) => {
   const v = s.visual;
-  if (!v || v.type === 'image' || !v.bg) return;
+  if (!v || v.type === 'image' || !v.bg || footage[i] || jobs.length >= MAX_AI) return;
   const scene = sanitizePrompt(v.bg);
   if (scene.replace(/[^a-z]/gi, '').length < 15) return;
   jobs.push({ json: {
@@ -94,5 +98,5 @@ const tp = sanitizePrompt(p.thumbnail && p.thumbnail.prompt);
 if (tp.replace(/[^a-z]/gi, '').length >= 15) {
   jobs.push({ json: { sceneIndex: -1, body: { prompt: style.prefix + '. ' + tp + ', ' + style.suffix + ', ' + THUMB_FRAME + ', ' + safetyFor(tp), image_size: { width: 1920, height: 1080 }, num_images: 1, enable_safety_checker: true } } });
 }
-console.log('image jobs: ' + jobs.length + ' (' + p.category + ', 썸네일 포함)');
+console.log('AI 그림 요청 ' + jobs.length + '건 (' + p.category + ', 썸네일 포함) | 실사 영상 장면 ' + Object.keys(footage).length + '개');
 return jobs.length ? jobs : [{ json: { skip: true } }];
