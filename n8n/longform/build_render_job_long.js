@@ -4,7 +4,7 @@ const GITHUB_REPO = 'dycorea7/N8N_remotion';
 const GITHUB_BRANCH = 'main';
 const MUSIC_VOLUME = 0.10;   // 롱폼은 오래 들으니 쇼츠보다 낮게
 // 영상 스타일: 'classic' = 기존 카드형 / 'glyph' = 글자로 그린 이미지·글자 바닥·네온 타이포 (참고 영상 스타일)
-// 롱폼은 글리프를 쓰지 않는다 (렌더가 너무 오래 걸림). 'hud' = 에디토리얼 HUD / 'pop' = 원색 블록·초대형 타이포·도형 모핑 / 'keynote' = 애플 키노트풍 (오프화이트·검은 UI·리퀴드 글래스·커서)
+// 롱폼은 글리프를 쓰지 않는다 (렌더가 너무 오래 걸림). 'hud' = 에디토리얼 HUD / 'pop' = 원색 블록·초대형 타이포·도형 모핑 / 'keynote' = 애플 키노트풍 (오프화이트·검은 UI·리퀘드 글래스·커서)
 // 'editorial' = 다큐 설명 영상풍 종이 콜라주 (크림 종이·큰 빨간 원·테이프 붙인 사진·빨간 마커·스톱모션)
 const STYLE_BY_CATEGORY = {};
 // ================
@@ -30,12 +30,14 @@ function pickStyle(p) {
 if (!GITHUB_REPO) throw new Error('Build Render Job 노드의 GITHUB_REPO에 저장소 이름(아이디/저장소)을 입력하세요');
 
 const p = $('Parse Longform Script').first().json;
-const tts = $('ElevenLabs TTS (timestamps)').first().json;
-if (!tts.audio_base64 || !tts.alignment) throw new Error('ElevenLabs 응답에 audio_base64/alignment가 없습니다: ' + JSON.stringify(tts).slice(0, 300));
+// 나레이션 음성(롱폼은 약 15~20MB)은 실행 데이터에 넣지 않고 드라이브 파일로 넘긴다 → 렌더 기다리는 동안 n8n이 큰 데이터를 저장하다 멈추지 않게
+const tts = $('TTS Unpack').first().json;
+const voiceId = $('Upload Voice to Drive').first().json.id;   // 공유(Share Voice File) 결과의 id는 파일 id가 아니라 'anyoneWithLink'
+if (!tts.alignment || !voiceId) throw new Error('나레이션 음성 또는 타이밍(alignment)이 없습니다: ' + JSON.stringify(tts).slice(0, 300));
 
 // ── fal.ai 결과를 장면에 붙인다 (요청 순서 = 응답 순서). 실패한 장면은 렌더러가 텍스트 장면으로 바꾼다 ──
 const scenes = JSON.parse(JSON.stringify(p.scenes)); // 장면마다 chapter 번호가 있다
-let imagesOk = 0, imagesFailed = 0;
+let imagesOk = 0, imagesFailed = 0, clips = 0, bgClips = 0;
 const failures = [];
 let reqs = [], res = [];
 try { reqs = $('Prepare Image Jobs').all(); } catch (e) { /* 이미지 단계 없음 */ }
@@ -51,7 +53,26 @@ reqs.forEach((r, k) => {
   if (url && scenes[idx]) { if (r.json.kind === 'bg') scenes[idx].visual.bgSrc = url; else scenes[idx].visual.src = url; imagesOk++; }
   else { imagesFailed++; failures.push('장면 ' + (idx + 1) + ': ' + JSON.stringify(out && (out.error || out.detail) || 'no image').slice(0, 160)); }
 });
-for (const s of scenes) if (s.visual) { delete s.visual.prompt; delete s.visual.bg; } // 렌더러에는 필요 없음
+// ── 실사 영상(Pixabay): 이미지 장면은 화면 가득(video), 그래픽 장면은 그 뒤 배경(bgVideo). 정지 화면(src/bgSrc)도 넣어 영상을 못 받으면 사진으로 남는다 ──
+let footage = {};
+try { footage = $('Pick Footage').first().json.picks || {}; } catch (e) {}
+for (const k of Object.keys(footage)) {
+  const sc = scenes[Number(k)], f = footage[k];
+  if (!sc || !sc.visual || !f.video) continue;
+  if (f.kind === 'bg') {
+    if (['image', 'chapter', 'outro'].includes(sc.visual.type)) continue;
+    sc.visual.bgVideo = f.video; sc.visual.bgVideoStart = f.videoStart || 0;
+    if (!sc.visual.bgSrc) sc.visual.bgSrc = f.poster;
+    bgClips++;
+    continue;
+  }
+  if (sc.visual.type !== 'image') continue;
+  sc.visual.video = f.video; sc.visual.videoStart = f.videoStart || 0;
+  if (!sc.visual.src) sc.visual.src = f.poster;
+  clips++;
+}
+for (const s of scenes) if (s.visual) { delete s.visual.prompt; delete s.visual.bg; delete s.visual.footage; delete s.visual.bgFootage; } // 렌더러에는 필요 없음
+const textOnly = scenes.filter(s => { const v = s.visual || {}; return !['image', 'chapter', 'outro'].includes(v.type) && !v.bgSrc; }).length;
 
 // ── 배경음악: 드라이브 라이브러리에서 무드에 맞는 곡 하나 ──
 let musicUrl = '', musicName = 'none';
@@ -73,14 +94,14 @@ const jobId = 'lf_' + $now.toFormat('yyyyMMdd_HHmmss') + '_' + Math.random().toS
 const job = {
   job_id: jobId, format: 'long', fps: 24, lang: p.subtitleLang, category: p.category, title: p.title,
   chapters: p.chapters, thumbnail: Object.assign({}, p.thumbnail, { src: thumbSrc }),
-  scenes, alignment: tts.alignment, audio_base64: tts.audio_base64,
+  scenes, alignment: tts.alignment, audio_url: 'https://drive.google.com/uc?export=download&id=' + voiceId,
   music_url: musicUrl, music_volume: MUSIC_VOLUME, style: pickStyle(p)
 };
 const text = JSON.stringify(job);
-console.log('job ' + jobId + ' | ' + Math.round(text.length / 1024) + 'KB | images ' + imagesOk + ' ok / ' + imagesFailed + ' failed | music: ' + musicName);
+console.log('job ' + jobId + ' | ' + Math.round(text.length / 1024) + 'KB | 실사 영상 ' + clips + ' + 그래픽 뒤 ' + bgClips + ' | AI 그림 ' + imagesOk + ' ok / ' + imagesFailed + ' failed | 글씨만 나오는 장면 ' + textOnly + ' | music: ' + musicName);
 if (failures.length) console.log('image failures: ' + failures.join(' | '));
 
 return [{
-  json: { jobId, repo: GITHUB_REPO, branch: GITHUB_BRANCH, imagesOk, imagesFailed, thumbImage: !!thumbSrc, musicName, sceneCount: scenes.length, jobKB: Math.round(text.length / 1024) },
+  json: { jobId, repo: GITHUB_REPO, branch: GITHUB_BRANCH, imagesOk, imagesFailed, clips: clips + bgClips, textOnly, thumbImage: !!thumbSrc, musicName, sceneCount: scenes.length, jobKB: Math.round(text.length / 1024) },
   binary: { data: { data: Buffer.from(text, 'utf8').toString('base64'), mimeType: 'application/json', fileName: jobId + '.json' } }
 }];
