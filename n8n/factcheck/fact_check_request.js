@@ -14,16 +14,25 @@ if (!parsed) return [{ json: { skip: true, reason: 'unparsed' } }];
 const scenes = Array.isArray(parsed.scenes) ? parsed.scenes : (parsed.chapters || []).flatMap(c => (c && c.scenes) || []);
 const narr = scenes.map(x => String((x && x.narration) || '')).filter(Boolean).join('\n');
 const cards = scenes.map(x => x && x.visual).filter(v => v && (v.type === 'quote' || v.type === 'scripture')).map(v => '- [' + v.type + '] ' + v.text + ' — ' + (v.author || ''));
+// 제목·화면 글자: "8가지"처럼 약속한 개수와 실제로 소개한 개수가 맞는지 보려고 같이 넘긴다 (11/6 블루존 8가지인데 6개만 소개)
+const title = String(parsed.title || '');
+const screen = scenes.map(x => x && x.visual).filter(Boolean).map(v => [v.title, v.text, v.label, Array.isArray(v.items) ? v.items.map(i => typeof i === 'string' ? i : (i && (i.label || i.text)) || '').join(', ') : ''].filter(Boolean).join(' / ')).filter(Boolean);
 // 인용이 없어도 통계·연구 결과 같은 숫자 주장이 있으니 항상 검사한다
 const prompt = `You are a strict fact-checker for a Korean YouTube script. You have a web_search tool: USE IT. Search (Korean or English) to verify every checkable claim below before you judge it - do not rely on memory alone. A claim you cannot confirm with a reliable source (encyclopedia, original text, university, government or health body, peer-reviewed study, major news outlet, reputable quotation reference) is a PROBLEM. Check ONLY these things:
 (a) Every direct quotation attributed to a named person (in the narration or on the quote cards): is it a well-documented quotation - a faithful Korean rendering of words that person actually wrote or said, traceable to their works, letters, speeches or a reliable quotation reference? Popular internet "quotes" that are misattributed, invented or only loosely inspired by the person are PROBLEMS. A sentence stated as "X said / 말했습니다 / 라고 했습니다" counts as a quotation.
 (b) Specific factual claims: about real named people or events (what they did, ages, years), and every statistic, percentage, amount or "research shows / 연구 결과" claim. A number presented as a fact or a study finding that is not well established (or is invented to sound precise) is a PROBLEM - suggest removing it or stating it generally without a made-up number.
 (c) Scripture: does that reference really contain that wording (Korean 개역개정)?
 (d) Invented stories or experiments presented as real (e.g. we tried it for 7 days, a named person did something they did not do) are PROBLEMS.
+(e) COUNT PROMISE (no search needed): if the title, the narration or the on-screen text promises a number of items (e.g. 8가지, 5개, 3단계, TOP 3, 7 habits), count the distinct items the narration actually names. If the numbers differ (e.g. the title says 8가지 but only 6 are named), it is a PROBLEM. fix: either name exactly that many items, or change the number everywhere - title, on-screen text and narration - to the count actually named.
 Be strict: if you are not confident something is accurate, list it as a problem. Ignore opinions, advice and general statements.
+
+Title: ${title}
 
 Narration:
 ${narr}
+
+On-screen text per scene:
+${screen.map((t, i) => (i + 1) + '. ' + t).join('\n')}
 ${cards.length ? '\nOn-screen quote/scripture cards:\n' + cards.join('\n') : ''}
 
 After searching, end your reply with ONE JSON object and nothing after it: {"ok": true or false, "checked": number of claims checked, "problems": [{"text": "the exact doubtful sentence or quote", "issue": "why it is doubtful, citing what the search found", "fix": "how to correct it - usually: paraphrase without quotation marks, or state it generally without the number", "source": "URL that shows the correct fact, or empty"}]}`;
