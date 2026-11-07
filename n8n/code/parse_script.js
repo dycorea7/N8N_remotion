@@ -98,9 +98,11 @@ const langKey = String(src.Language || 'Korean').trim().toLowerCase();
 const subtitleLang = langKey === 'english' ? 'en' : 'ko';
 
 // ── 장면 검증 ──
+const TONES = ['playful', 'curious', 'excited', 'surprised', 'thoughtful', 'warm', 'serious', 'mischievously', 'chuckles', 'sighs', 'whispers'];   // v3 음성 연기 표시 (장면 맨 앞에 [tone]으로 붙는다)
 const scenes = (Array.isArray(parsed.scenes) ? parsed.scenes : [])
   .map(s => ({
-    narration: String(s && s.narration || '').replace(/\s*\n\s*/g, ' ').replace(/["]/g, '”').trim(),
+    narration: String(s && s.narration || '').replace(/\s*\n\s*/g, ' ').replace(/["]/g, '”').replace(/[\[\]]/g, '').trim(),
+    tone: TONES.indexOf(String(s && s.tone || '').trim().toLowerCase()) >= 0 ? String(s.tone).trim().toLowerCase() : '',
     visual: s && typeof s.visual === 'object' ? s.visual : null
   }))
   .filter(s => s.narration.length > 0);
@@ -111,6 +113,8 @@ if (scenes.length > 12) scenes.splice(12);
 for (const s of scenes) { s.display = s.narration; if (subtitleLang === 'ko') s.narration = koSpeech(s.narration); }
 const displayScript = scenes.map(s => s.display).join('\n');
 const script = scenes.map(s => s.narration).join('\n');
+// ElevenLabs v3에 보내는 글: 장면마다 [tone]을 앞에 붙인다 (자막·장면 타이밍은 Build Render Job에서 tone을 뺀 script 기준)
+const ttsScript = scenes.map(s => (s.tone ? '[' + s.tone + '] ' : '') + s.narration).join('\n');
 const MAX_CHARS = subtitleLang === 'en' ? 1150 : 900;
 if (displayScript.length > MAX_CHARS) throw new Error('대본이 너무 깁니다: ' + displayScript.length + '자 (상한 ' + MAX_CHARS + ')');
 
@@ -161,7 +165,7 @@ return [{ json: {
   title: String(parsed.title || src.Topic).slice(0, 100),
   // 롱폼 파생 쇼츠는 설명란 맨 위에 전체 영상 링크
   description: (src.LongURL ? '▶ 전체 영상 보기: ' + src.LongURL + '\n\n' : '') + String(parsed.description || '') + '\n\n' + hashtags.join(' '),
-  hashtags, script, scenes, sceneTypes: types.join(' → '),
+  hashtags, script, ttsScript, scenes, sceneTypes: types.join(' → '),
   format, category, mood, styleFit, imageCount, bgCount,
   topic: src.Topic, language: src.Language || 'Korean', subtitleLang, rowNumber: src.row_number
 } }];

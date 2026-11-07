@@ -4,7 +4,7 @@ const GITHUB_REPO = 'dycorea7/N8N_remotion';
 const GITHUB_BRANCH = 'main';
 const MUSIC_VOLUME = 0.16;
 // 영상 스타일: 'classic' = 기존 카드형 / 'glyph' = 글자로 그린 이미지·글자 바닥·네온 타이포 (참고 영상 스타일)
-// 'hud' = 에디토리얼 HUD (추적 상자·태그 카드·플랩 숫자) / 'pop' = 원색 블록·초대형 타이포·도형 모핑 / 'keynote' = 애플 키노트풍 (오프화이트·검은 UI·리퀴드 글래스·커서)
+// 'hud' = 에디토리얼 HUD (추적 상자·태그 카드·플랩 숫자) / 'pop' = 원색 블록·초대형 타이포·도형 모핑 / 'keynote' = 애플 키노트풍 (오프화이트·검은 UI·리퀘드 글래스·커서)
 // 'editorial' = 다큐 설명 영상풍 종이 콜라주 (크림 종이·큰 빨간 원·테이프 붙인 사진·빨간 마커·스톱모션)
 const STYLE_BY_CATEGORY = { wealth: 'glyph' };
 // ================
@@ -24,8 +24,24 @@ function pickStyle(p) {
 if (!GITHUB_REPO) throw new Error('Build Render Job 노드의 GITHUB_REPO에 저장소 이름(아이디/저장소)을 입력하세요');
 
 const p = $('Parse Script JSON').first().json;
+// v3 감정 표시([playful] 등)는 음성 연기에만 쓰고 자막·장면 타이밍에서는 뺀다 → 남은 글자가 장면 narration을 줄바꿈으로 이은 것과 정확히 같아진다
+function stripTags(al) {
+  const c = al.characters || [], st = al.character_start_times_seconds || [], en = al.character_end_times_seconds || [];
+  const C = [], S = [], E = [];
+  let inTag = false, skipSpace = false;
+  for (let i = 0; i < c.length; i++) {
+    const ch = c[i];
+    if (ch === '[') { inTag = true; continue; }
+    if (inTag) { if (ch === ']') { inTag = false; skipSpace = true; } continue; }
+    if (skipSpace && ch === ' ') { skipSpace = false; continue; }
+    skipSpace = false;
+    C.push(ch); S.push(st[i]); E.push(en[i]);
+  }
+  return { characters: C, character_start_times_seconds: S, character_end_times_seconds: E };
+}
 const tts = $('ElevenLabs TTS (timestamps)').first().json;
 if (!tts.audio_base64 || !tts.alignment) throw new Error('ElevenLabs 응답에 audio_base64/alignment가 없습니다: ' + JSON.stringify(tts).slice(0, 300));
+const alignment = stripTags(tts.alignment);
 
 // ── fal.ai 결과를 장면에 붙인다 (요청 순서 = 응답 순서). 실패한 장면은 렌더러가 텍스트 장면으로 바꾼다 ──
 const scenes = JSON.parse(JSON.stringify(p.scenes));
@@ -89,7 +105,7 @@ if (pool.length) {
 const jobId = 'ms_' + $now.toFormat('yyyyMMdd_HHmmss') + '_' + Math.random().toString(36).slice(2, 7);
 const job = {
   job_id: jobId, lang: p.subtitleLang, category: p.category, title: p.title,
-  scenes, alignment: tts.alignment, audio_base64: tts.audio_base64,
+  scenes, alignment, audio_base64: tts.audio_base64,
   music_url: musicUrl, music_volume: MUSIC_VOLUME, style: pickStyle(p)
 };
 const text = JSON.stringify(job);

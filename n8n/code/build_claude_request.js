@@ -11,6 +11,9 @@ const lengthRule = isKorean
   ? 'The full narration (all scene narrations together) must be between 250 and 320 Korean characters including spaces (~35 to 40 seconds spoken). Shorter Shorts are watched to the end more often; under 250 is too thin, over 320 is a failure.'
   : 'The full narration (all scene narrations together) must be between 100 and 135 English words (~35 to 40 seconds spoken). Under 100 is too thin; over 135 is a failure.';
 
+// 목소리 연기(ElevenLabs v3): 약간 장난스러운 말투 + 장면마다 tone(감정 표시)
+const TONE_RULE = '=== VOICE & TONE (an expressive AI voice reads this) ===\nSound like a smart, warm friend with a slightly playful streak: a beat of suspense before a reveal (1등은요... 콩이에요), a quick aside or self-correction (네, 그 콩이요), a light question to the viewer (자, 솔직하게요). one or two playful moments in the whole Short - the facts stay accurate and the point stays serious; never silly, never mocking the viewer, no slang that ages badly. Grief, illness, money hardship and faith topics stay warm and gentle with little or no play. Use ... for a natural pause.\nEach scene also gets \"tone\": ONE delivery cue the voice acts out for that line, from: playful, curious, excited, surprised, thoughtful, warm, serious, mischievously, chuckles, sighs, whispers. Match it to the line (curious for a question, surprised for a reveal, serious for a warning, chuckles before a light joke) and vary it. chuckles, sighs and whispers rarely. Sermons and faith topics: only warm, thoughtful or serious.\n\n';
+
 const seed = Math.floor(Date.now() / 86400000) + (Number($json.row_number) || 0);
 
 const SERMON_SHAPES = [
@@ -76,7 +79,7 @@ Write everything viewers see or hear - narration, on-screen text, title, descrip
 === LENGTH (hard rule) ===
 ${lengthRule}
 Earn the length with SPECIFICS (a concrete scene, a real number, a counter-argument), never with restatement.${isKorean ? '\n\n=== NARRATION STYLE (read aloud by a voice) ===\nWrite the way people actually talk, in conversational 해요체 - endings like 해요, 거든요, 잖아요, 더라고요, 볼까요, 네요, 죠. Never the stiff written style (합니다, 습니다, 입니다, 됩니다), not even in the first or the last line. Make natural breath units: short sentences, a comma where a speaker would take a breath inside a longer sentence, a period at the end of each thought. One scene = one or two breath units. Do not put line breaks inside a narration (each scene already becomes its own line). Cut connecting words: 그리고, 하지만, 따라서, 그래서, 또한, 즉, 그러므로, 게다가 - just start the next sentence. Use a spoken turn like 근데 or 그러니까 only when the contrast or reason really needs it, and rarely. Example - stiff: 그리고 이 방법은 시간을 절약할 수 있습니다. 따라서 바쁜 분들께 좋습니다. Natural: 이렇게 하면요, 시간이 확 줄거든요. 바쁜 날에 딱이에요.\nWrite numbers and units with DIGITS and symbols (30%, 1,000만 원, 63℃, 3명, 2026년, 7가지) - they are converted to correct spoken Korean automatically; never spell numbers out in hangul. Avoid parentheses, slashes and abbreviations that are awkward to read aloud.\n' : ''}
-FACTS (hard rule): after you write, every quotation, number, study, named-person fact and scripture wording is checked with web search, and anything that cannot be confirmed is cut. So never invent a statistic, study, experiment, personal story or quote; use only facts you are sure are well documented, and say a point generally when you are not sure of the exact figure.
+${TONE_RULE}FACTS (hard rule): after you write, every quotation, number, study, named-person fact and scripture wording is checked with web search, and anything that cannot be confirmed is cut. So never invent a statistic, study, experiment, personal story or quote; use only facts you are sure are well documented, and say a point generally when you are not sure of the exact figure.
 
 === THE FIRST TWO SECONDS DECIDE EVERYTHING ===
 The first narration line must be under 12 words, open mid-tension or mid-claim, and create an information gap.
@@ -106,7 +109,7 @@ Only quotes genuinely and widely attributed. Facts and figures accurate and main
 For the ending: ${closing}.
 
 === STEP 3: SCENES (this is the motion design) ===
-Split the narration into 10 to 12 scenes, in order (a new visual every 2 to 4 seconds). Each scene = { "narration": the exact words spoken during it (one or two sentences), "visual": what is on screen }.
+Split the narration into 10 to 12 scenes, in order (a new visual every 2 to 4 seconds). Each scene = { "narration": the exact words spoken during it (one or two sentences), "tone": the delivery cue (see VOICE & TONE), "visual": what is on screen }.
 Joining every narration with a line break must give the complete script - nothing spoken outside scenes. Narration is spoken text only: no stage directions, no emoji, no brackets.
 Each scene lasts while its narration is spoken (about 2-4 seconds), so the visual must be readable at a glance.
 
@@ -154,7 +157,7 @@ Sermons and faith topics are always classic.
 mood: EXACTLY ONE of calm_reflective, hopeful_uplifting, tense_dramatic, dark_serious, warm_gentle.
 
 Respond ONLY with valid JSON, no markdown fences:
-{"title":"...","description":"...","hashtags":["#tag"],"format":"sermon or essay","category":"bible|quote|wealth|health|other","mood":"...","style":"hud|classic|pop|keynote|editorial|either","scenes":[{"narration":"...","visual":{"type":"headline","text":"...","highlight":["..."],"emoji":"...","bg":"...","bgFootage":"..."}}]}`;
+{"title":"...","description":"...","hashtags":["#tag"],"format":"sermon or essay","category":"bible|quote|wealth|health|other","mood":"...","style":"hud|classic|pop|keynote|editorial|either","scenes":[{"narration":"...","tone":"curious","visual":{"type":"headline","text":"...","highlight":["..."],"emoji":"...","bg":"...","bgFootage":"..."}}]}`;
 
 console.log('seed ' + seed + ' | sermon: ' + sermonShape.split(' - ')[0] + ' | essay: ' + essayFormat.split(' - ')[0]);
 return [{ json: { body: { model: 'claude-sonnet-4-6', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] }, Topic: topic, Language: language, row_number: $json.row_number, useImages: USE_AI_IMAGES, maxImages: MAX_IMAGES, LongURL: longUrl, Source: String($json.Source || ''), Series: seriesName, Episode: ep, benchmarkCount: Number($json.benchmarkCount || 0) } }];
