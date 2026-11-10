@@ -54,15 +54,26 @@ jobs:
           cache: npm
           cache-dependency-path: remotion/package-lock.json
 
-      # 우분투 패키지 서버가 가끔 응답 없이 멈춘다 (11/6 저녁 26분 멈춤) → 단계마다 시간 제한 + 3번까지 다시 시도
+      # 우분투 패키지 서버(apt)가 자주 응답 없이 멈춘다 (11/6 26분, 11/10 12분 시간 초과)
+      # → apt를 쓰지 않고 GitHub에서 바로 받는다: 이모지 글꼴(googlefonts/noto-emoji) + ffmpeg 정적 빌드(BtbN). 실패할 때만 apt로
       - name: Install emoji font and ffmpeg
-        timeout-minutes: 12
+        timeout-minutes: 10
         run: |
-          for i in 1 2 3; do
-            if timeout 150 sudo apt-get update -qq && timeout 240 sudo apt-get install -y -qq fonts-noto-color-emoji ffmpeg; then break; fi
-            echo "apt 설치 실패/멈춤 — 다시 시도 ($i/3)"; sleep 10
-          done
-          command -v ffmpeg
+          mkdir -p ~/.local/share/fonts
+          if curl -fsSL --retry 3 --max-time 120 -o ~/.local/share/fonts/NotoColorEmoji.ttf https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf \
+            || curl -fsSL --retry 3 --max-time 120 -o ~/.local/share/fonts/NotoColorEmoji.ttf https://github.com/google/fonts/raw/main/ofl/notocoloremoji/NotoColorEmoji-Regular.ttf; then
+            fc-cache -f >/dev/null 2>&1 || true; echo "emoji font: GitHub"
+          else
+            timeout 240 sudo apt-get install -y -qq fonts-noto-color-emoji || (timeout 120 sudo apt-get update -qq && timeout 240 sudo apt-get install -y -qq fonts-noto-color-emoji) || echo "emoji font 설치 실패 — 이모지 없이 진행"
+          fi
+          if ! command -v ffmpeg >/dev/null; then
+            if curl -fsSL --retry 3 --max-time 300 -o /tmp/ff.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz; then
+              mkdir -p /tmp/ff && tar -xJf /tmp/ff.tar.xz -C /tmp/ff --strip-components=1 && sudo cp /tmp/ff/bin/ffmpeg /tmp/ff/bin/ffprobe /usr/local/bin/
+            else
+              timeout 240 sudo apt-get install -y -qq ffmpeg || (timeout 120 sudo apt-get update -qq && timeout 240 sudo apt-get install -y -qq ffmpeg)
+            fi
+          fi
+          ffmpeg -version | head -1
 
       - name: Install dependencies
         working-directory: remotion
