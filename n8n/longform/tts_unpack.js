@@ -28,6 +28,10 @@ for (let i = 0; i < items.length; i++) {
   if (!r.audio_base64 || !r.alignment) throw new Error('ElevenLabs 응답 ' + (i + 1) + '번째 조각에 audio_base64/alignment가 없습니다: ' + buf.toString('utf8').slice(0, 300));
   const audio = Buffer.from(r.audio_base64, 'base64');
   const al = stripTags(r.alignment);
+  // 끊김 검사: v3가 조각을 끝까지 읽지 않으면 남은 글자들이 전부 마지막 시각에 몰린다 → 그대로 영상을 만들면 내용이 빠진다
+  { const n = al.characters.length, last = al.character_end_times_seconds[n - 1] || 0;
+    let tail = 0; for (let k = n - 1; k >= 0 && al.character_start_times_seconds[k] >= last - 0.02; k--) tail++;
+    if (tail > 12) throw new Error('ElevenLabs v3 음성이 ' + (i + 1) + '번째 조각에서 끝까지 읽지 않고 끊겼습니다 (' + tail + '자 빠짐, ' + Math.round(last) + '초 지점). 다시 실행하세요.'); }
   if (i > 0) { C.push('\n'); S.push(offset); E.push(offset); }
   al.characters.forEach((ch, k) => { C.push(ch); S.push(offset + al.character_start_times_seconds[k]); E.push(offset + al.character_end_times_seconds[k]); });
   const dur = Math.max(audio.length / 16000, al.character_end_times_seconds[al.characters.length - 1] || 0);
