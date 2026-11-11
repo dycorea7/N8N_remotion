@@ -6,11 +6,12 @@ const MUSIC_VOLUME = 0.10;   // 롱폼은 오래 들으니 쇼츠보다 낮게
 // 영상 스타일: 'classic' = 기존 카드형 / 'glyph' = 글자로 그린 이미지·글자 바닥·네온 타이포 (참고 영상 스타일)
 // 롱폼은 글리프를 쓰지 않는다 (렌더가 너무 오래 걸림). 'hud' = 에디토리얼 HUD / 'pop' = 원색 블록·초대형 타이포·도형 모핑 / 'keynote' = 애플 키노트풍 (오프화이트·검은 UI·리퀘드 글래스·커서)
 // 'editorial' = 다큐 설명 영상풍 종이 콜라주 (크림 종이·큰 빨간 원·테이프 붙인 사진·빨간 마커·스톱모션)
-const STYLE_BY_CATEGORY = {};
+// 'bank' = 모바일 은행 앱·영수증 (잔액 카운터·소비 분석 막대·자동이체 토글·영수증 출력·이체 완료 화면). 돈 주제 전용
+const STYLE_BY_CATEGORY = { wealth: 'bank' };
 // ================
 
 // 영상 스타일
-//  - 카테고리 고정: STYLE_BY_CATEGORY (경제 = glyph)
+//  - 카테고리 고정: STYLE_BY_CATEGORY (돈·경제 = bank). 롱폼 고정 스타일(FORCE_STYLE)보다 먼저
 //  - 설교·성경: 항상 classic
 //  - 나머지: Claude가 주제에 맞다고 고른 스타일(hud / classic / pop / keynote / editorial). 'either'면 다섯 가지를 날마다 돌아가며 쓴다
 const ROTATION = ['classic', 'hud', 'pop', 'keynote', 'editorial'];
@@ -19,6 +20,7 @@ const FORCE_STYLE = 'editorial';
 // 한 번만 쓰는 스타일 지정: 이 날짜 전까지 만드는 롱폼은 이 스타일로 (10/27 화요일 롱폼 = 키노트). 지나면 자동으로 원래대로
 const ONE_OFF_STYLE = { style: 'keynote', before: '2026-10-28T00:00:00-04:00' };
 function pickStyle(p) {
+  if (STYLE_BY_CATEGORY[p.category]) return STYLE_BY_CATEGORY[p.category];
   if (FORCE_STYLE) return FORCE_STYLE;
   if (ONE_OFF_STYLE.style && Date.now() < Date.parse(ONE_OFF_STYLE.before)) return ONE_OFF_STYLE.style;
   if (STYLE_BY_CATEGORY[p.category]) return STYLE_BY_CATEGORY[p.category];
