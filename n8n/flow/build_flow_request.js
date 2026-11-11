@@ -48,7 +48,7 @@ hook_text: the key phrase of scene 1 as big text over the first clip, at most 14
 
 === SEO ===
 title: 20 to 45 characters, the main search keyword first, a payoff the video really delivers.
-description: first line states the main keyword as a question or promise, then one or two lines on what the video answers, then the channel line (Korean: 📌 Next You Global 채널은 성경 말씀, 동기부여, 부자 마인드셋, 자기계발 쇼츠를 업로드합니다. English: 📌 Next You Global posts motivation, wealth mindset and self-improvement shorts.) and a subscribe line (Korean: 👉 구독 & 좋아요로 함께 성장해요! English: 👉 Subscribe and like to grow with us!).
+description: first line states the main keyword as a question or promise, then one or two lines on what the video answers, then ONLY the channel line and the subscribe line in the video's language (${isKorean ? '📌 Next You Global 채널은 성경 말씀, 동기부여, 부자 마인드셋, 자기계발 쇼츠를 업로드합니다. / 👉 구독 & 좋아요로 함께 성장해요!' : '📌 Next You Global posts motivation, wealth mindset and self-improvement shorts. / 👉 Subscribe and like to grow with us!'}), each on its own line.
 hashtags: 4 to 6, main keyword first, #NextYouGlobal last.
 category: EXACTLY ONE of quote, wealth, health, other. mood: EXACTLY ONE of calm_reflective, hopeful_uplifting, tense_dramatic, dark_serious, warm_gentle.
 
