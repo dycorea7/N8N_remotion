@@ -32,20 +32,24 @@ const esc = x => String(x || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 const folderUrl = 'https://drive.google.com/drive/folders/' + folder.id;
 const total = E.length ? E[E.length - 1] : 0;
 const head = [
-  '🎬 <b>Flow 쇼츠 제작 키트</b>',
+  (p.format === 'cooking' ? '🍳 <b>Flow 요리 쇼츠 제작 키트</b>' : '🎬 <b>Flow 쇼츠 제작 키트</b>'),
   '<b>' + esc(p.title) + '</b>',
   '주제: ' + esc(p.topic) + ' · 나레이션 ' + Math.round(total) + '초 · 장면 ' + p.scenes.length + '개',
   '',
   '1) Google Flow에서 <b>세로 9:16</b>으로 장면마다 클립 1개씩 만드세요 (8초, 소리는 쓰지 않아요).',
   '2) 클립을 아래 폴더에 장면 번호로 올리세요: <code>01.mp4</code>, <code>02.mp4</code> …',
-  '3) 다 올리면 마지막 메시지의 버튼을 누르세요. 빠진 장면은 글자 화면으로 채워요.',
+  '3) 다 올리면 마지막 메시지의 버튼을 누르세요. 빠진 장면은 그래픽 화면으로 채워요.',
   '',
   '📁 폴더: ' + folderUrl,
+  p.setting ? '\n' + (p.format === 'cooking' ? '🍳 <b>주방</b>' : '📍 <b>장소</b>') + ' (모든 장면에 같은 곳)\n<code>' + esc(p.setting) + '</code>' : '',
   p.character ? '\n👤 <b>인물</b> (모든 장면에 같은 사람)\n<code>' + esc(p.character) + '</code>' : ''
 ].join('\n');
+// 장면 위 모션 그래픽 미리 알려 주기 (클립에 글자를 넣을 필요 없음)
+const OV = { stat: '숫자', list: '목록', checklist: '체크리스트', step: '단계', timer: '타이머', compare: '비교', tag: '꼬리표' };
+const ovText = o => !o ? '' : '\n🎨 그래픽(자동): ' + (OV[o.kind] || o.kind) + ' · ' + esc([o.title, o.label, o.text, o.value != null ? String(o.value) + (o.suffix || '') : '', o.seconds ? o.seconds + '초' : '', (o.items || []).join(', '), o.left && o.right ? o.left + ' → ' + o.right : ''].filter(Boolean).join(' · '));
 const items = [{ json: { text: head } }];
 p.scenes.forEach((s, i) => {
-  items.push({ json: { text: '<b>장면 ' + String(i + 1).padStart(2, '0') + '</b> · 약 ' + (Math.round((secs[i] || 0) * 10) / 10) + '초' + (s.tone ? ' · ' + s.tone : '') + '\n🗣 ' + esc(s.narration) + '\n\n<code>' + esc(s.prompt) + '</code>' } });
+  items.push({ json: { text: '<b>장면 ' + String(i + 1).padStart(2, '0') + '</b> · 약 ' + (Math.round((secs[i] || 0) * 10) / 10) + '초' + (s.tone ? ' · ' + s.tone : '') + '\n🗣 ' + esc(s.narration) + ovText(s.overlay) + '\n\n<code>' + esc(s.prompt) + '</code>' } });
 });
 console.log('키트: 장면 길이 ' + secs.map(x => x.toFixed(1)).join(' / ') + '초');
 return items;

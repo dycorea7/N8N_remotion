@@ -32,6 +32,11 @@ export const THEMES: Record<string, Theme> = {
     card: 'rgba(255,255,255,0.06)', cardBorder: 'rgba(196,181,253,0.30)', headlineFont: SANS,
   },
 };
+THEMES.food = {
+  bg1: '#1a0f08', bg2: '#2e1a0e', blobA: 'rgba(255,170,80,0.32)', blobB: 'rgba(255,99,71,0.20)',
+  fg: '#fff8ef', muted: 'rgba(255,248,239,0.62)', accent: '#ffb547', accent2: '#ff7a59',
+  card: 'rgba(255,255,255,0.06)', cardBorder: 'rgba(255,181,71,0.30)', headlineFont: SANS,
+};
 THEMES.other = THEMES.quote;
 
 export const SANS_FONT = SANS;

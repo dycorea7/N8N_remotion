@@ -6,6 +6,7 @@ import { Scene, Visual } from './types';
 import { SceneBg, hasBg } from './SceneBg';
 import { Theme, SANS_FONT } from './theme';
 import { Media } from './Media';
+import { ClipOverlay } from './ClipOverlay';
 
 export type P = { scene: Scene; theme: Theme; index: number; durationInFrames: number; lang: string; category?: string; overlap?: number };
 
@@ -337,7 +338,8 @@ const ImageScene: React.FC<P> = ({ scene, theme, lang, index, durationInFrames }
       </AbsoluteFill>
       {/* 위: 키워드 가독성, 아래: 자막 가독성 */}
       <AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0.05) 52%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.72) 100%)' }} />
-      {v.text && (
+      {(v as any).overlay && <ClipOverlay o={(v as any).overlay} scene={scene} theme={theme} lang={lang} dur={durationInFrames} />}
+      {v.text && !(v as any).overlay && (
         <AbsoluteFill style={landscape
           ? { top: 70, height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 220px' }
           : { top: 250, height: 420, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 70px' }}>

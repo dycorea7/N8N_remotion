@@ -27,12 +27,22 @@ const byScene = new Array(N).fill(null);
 const numbered = files.map(f => ({ f, n: parseInt((String(f.name).match(/\d+/) || [])[0], 10) })).filter(x => x.n >= 1 && x.n <= N);
 if (numbered.length) numbered.sort((a, b) => a.f.name.localeCompare(b.f.name)).forEach(x => { if (!byScene[x.n - 1]) byScene[x.n - 1] = x.f; });
 else files.slice().sort((a, b) => a.name.localeCompare(b.name)).slice(0, N).forEach((f, i) => { byScene[i] = f; });
+// 클립이 빠진 장면: 영상 위 그래픽을 같은 종류의 모션 그래픽 화면으로 바꾼다 (없으면 글자 화면)
+function fallback(s, i) {
+  const o = s.overlay;
+  if (o && o.kind === 'stat' && o.value != null) return { type: 'stat', label: o.label || o.title || '', value: o.value, prefix: o.prefix || '', suffix: o.suffix || '', decimals: o.decimals || 0 };
+  if (o && (o.kind === 'list' || o.kind === 'checklist') && Array.isArray(o.items) && o.items.length) return { type: o.kind, title: o.title || '', items: o.items };
+  if (o && o.kind === 'compare' && o.left && o.right) return { type: 'compare', title: o.title || '', left: { label: '✕', text: o.left }, right: { label: '✓', text: o.right } };
+  if (o && o.kind === 'timer') return { type: 'icon', emoji: '⏰', text: o.text || o.title || s.narration.slice(0, 14) };
+  const text = (i === 0 && p.hookText) || (o && (o.text || o.title)) || s.narration.slice(0, 18);
+  return { type: 'headline', text, highlight: [] };
+}
 const missing = byScene.map((f, i) => f ? 0 : i + 1).filter(Boolean);
 const scenes = p.scenes.map((s, i) => {
   const f = byScene[i];
   const visual = f
-    ? { type: 'image', src: 'https://drive.google.com/thumbnail?id=' + f.id + '&sz=w1080', video: 'https://drive.google.com/uc?export=download&id=' + f.id, videoStart: 0, text: i === 0 ? p.hookText : '', highlight: [] }
-    : { type: 'headline', text: (i === 0 && p.hookText) || s.narration.slice(0, 18), highlight: [] };
+    ? Object.assign({ type: 'image', src: 'https://drive.google.com/thumbnail?id=' + f.id + '&sz=w1080', video: 'https://drive.google.com/uc?export=download&id=' + f.id, videoStart: 0, text: i === 0 ? p.hookText : '', highlight: [] }, s.overlay ? { overlay: s.overlay } : {})
+    : fallback(s, i);
   return { narration: s.narration, visual };
 });
 // 배경음악: 무드에 맞는 곡

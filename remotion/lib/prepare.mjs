@@ -62,6 +62,22 @@ function withBg(out, v) {
 function clean(v, n) { return String(v == null ? '' : v).trim().slice(0, n); }
 function num(v) { const n = typeof v === 'number' ? v : Number(String(v).replace(/[,\s]/g, '')); return Number.isFinite(n) ? n : null; }
 
+/** 영상 위 모션 그래픽(overlay) 정리. 이상하면 없앤다 */
+const OVERLAY_KINDS = ['stat', 'list', 'checklist', 'step', 'timer', 'compare', 'tag'];
+function sanitizeOverlay(o) {
+  if (!o || typeof o !== 'object' || !OVERLAY_KINDS.includes(o.kind)) return null;
+  const k = o.kind, out = { kind: k };
+  const t = (x, n) => clean(x, n);
+  if (o.title) out.title = t(o.title, 18);
+  if (k === 'stat') { const n = num(o.value); if (n == null) return null; out.value = n; out.label = t(o.label, 16); out.prefix = t(o.prefix, 3); out.suffix = t(o.suffix, 6); out.decimals = Math.max(0, Math.min(2, Math.round(num(o.decimals) || 0))); }
+  if (k === 'list' || k === 'checklist') { out.items = (Array.isArray(o.items) ? o.items : []).map(x => t(x, 16)).filter(Boolean).slice(0, 5); if (!out.items.length) return null; }
+  if (k === 'step') { out.number = Math.max(1, Math.min(20, Math.round(num(o.number) || 1))); out.text = t(o.text, 16); }
+  if (k === 'timer') { out.seconds = Math.max(1, Math.min(86400, Math.round(num(o.seconds) || 60))); out.text = t(o.text, 10); }
+  if (k === 'compare') { out.left = t(o.left, 16); out.right = t(o.right, 16); if (!out.left || !out.right) return null; }
+  if (k === 'tag') { out.label = t(o.label, 12); out.text = t(o.text, 14); if (!out.text && !out.label) return null; }
+  return out;
+}
+
 /** Claude가 만든 visual을 검증하고 정리한다. 이상하면 headline으로 대체. */
 export function sanitizeVisual(v, narration) {
   const fallback = { type: 'headline', text: clean(narration, 40), highlight: [] };
@@ -77,6 +93,9 @@ export function sanitizeVisual(v, narration) {
     const src = String(v.src || '') || vid;
     if (!/^(https?:\/\/|job\/)/.test(src)) return { type: 'headline', text: text || fallback.text, highlight, emoji: out.emoji };
     const out2 = { type: 'image', src, text, highlight };
+    // 영상 위에 함께 나오는 모션 그래픽 (Flow 쇼츠)
+    const ov = sanitizeOverlay(v.overlay);
+    if (ov) out2.overlay = ov;
     // 실사 영상 (render-job이 받아 둔 경우만). 시작 지점은 0~20초 안으로
     if (/^(https?:\/\/|job\/)/.test(String(v.video || ''))) { out2.video = String(v.video); out2.videoStart = Math.max(0, Math.min(20, Number(v.videoStart) || 0)); }
     // 레시피: 슬라이더(밝기 조절) 연출 없이 사진·영상만
