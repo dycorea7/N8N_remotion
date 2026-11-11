@@ -151,7 +151,6 @@ const Stat: React.FC<P> = ({ scene, index, lang, durationInFrames }) => {
             <Tile I={Lucide.Landmark} size={86} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: F.sans, fontWeight: 800, fontSize: 40, color: C.ink, letterSpacing: -1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.label || ko(lang, '내 통장', 'My account')}</div>
-              <div style={{ fontFamily: F.mono, fontSize: 28, color: C.gray, marginTop: 4 }}>NEXT {pad2(index + 11)}-{pad2((index * 7) % 90 + 10)}-****</div>
             </div>
             <Lucide.ChevronRight size={44} color={C.gray} />
           </div>
@@ -161,10 +160,9 @@ const Stat: React.FC<P> = ({ scene, index, lang, durationInFrames }) => {
             {v.suffix && <span style={{ fontSize: size * 0.42, marginLeft: 12 }}>{v.suffix}</span>}
           </div>
           {v.sub && <div style={{ fontFamily: F.sans, fontWeight: 600, fontSize: 34, color: C.gray, marginTop: 22, opacity: clamp01((frame - tm.endF) / 6), wordBreak: 'keep-all' }}>{v.sub}</div>}
-          <div style={{ display: 'flex', gap: 22, marginTop: 50 }}>
-            {[ko(lang, '채우기', 'Add'), ko(lang, '보내기', 'Send')].map((t, i) => (
-              <div key={i} style={{ flex: 1, height: 104, borderRadius: 28, background: i ? C.blue : C.blueSoft, color: i ? '#fff' : C.blue, fontFamily: F.sans, fontWeight: 800, fontSize: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{t}</div>
-            ))}
+          {/* 숫자가 올라가는 만큼 차오르는 막대 (버튼 같은 꾸밈 글자는 넣지 않는다) */}
+          <div style={{ height: 22, borderRadius: 11, background: C.bg, marginTop: 46, overflow: 'hidden' }}>
+            <div style={{ width: `${p * 100}%`, height: '100%', borderRadius: 11, background: C.blue }} />
           </div>
         </Card>
       </Center>
