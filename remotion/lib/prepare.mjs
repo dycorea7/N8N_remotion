@@ -72,7 +72,9 @@ export function sanitizeVisual(v, narration) {
     // 이미지 생성이 실패했거나 꺼져 있으면 src가 없다 → 같은 키워드의 headline으로 대체
     const text = clean(v.text, 40);
     const highlight = (Array.isArray(v.highlight) ? v.highlight : []).map(h => clean(h, 20)).filter(Boolean).slice(0, 2);
-    const src = String(v.src || '');
+    // 정지 화면(src)을 못 받았어도 영상(video)이 있으면 영상 장면으로 쓴다 (Flow 쇼츠: 드라이브 썸네일이 아직 안 만들어졌을 때)
+    const vid = /^(https?:\/\/|job\/)/.test(String(v.video || '')) ? String(v.video) : '';
+    const src = String(v.src || '') || vid;
     if (!/^(https?:\/\/|job\/)/.test(src)) return { type: 'headline', text: text || fallback.text, highlight, emoji: out.emoji };
     const out2 = { type: 'image', src, text, highlight };
     // 실사 영상 (render-job이 받아 둔 경우만). 시작 지점은 0~20초 안으로
