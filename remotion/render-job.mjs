@@ -54,7 +54,9 @@ fs.mkdirSync(dir, { recursive: true });
 const warnings = [];
 
 // ── 나레이션 ──
-if (job.audio_base64) fs.writeFileSync(path.join(dir, 'voice.mp3'), Buffer.from(job.audio_base64, 'base64'));
+// 드라마 쇼츠(no_voice): 나레이션 없이 클립 소리만 쓴다
+if (job.no_voice) { /* 나레이션 없음 */ }
+else if (job.audio_base64) fs.writeFileSync(path.join(dir, 'voice.mp3'), Buffer.from(job.audio_base64, 'base64'));
 else if (job.audio_url) fs.writeFileSync(path.join(dir, 'voice.mp3'), await fetchBuf(job.audio_url));
 else throw new Error('audio_base64 또는 audio_url이 필요합니다');
 // 롱폼 구간 쇼츠: 나레이션을 그 구간만 자른다 (정렬 시각은 slice.mjs가 이미 0초 기준으로 옮겼다)
@@ -104,7 +106,7 @@ if (isLong && job.thumbnail && /^https?:\/\//.test(String(job.thumbnail.src || '
 }
 
 const props = prepare(job);
-props.audioSrc = `${rel}/voice.mp3`;
+if (!job.no_voice) props.audioSrc = `${rel}/voice.mp3`;
 if (!props.alignmentExact) warnings.push('정렬 문자와 대본이 달라 장면 시점을 비율로 근사했습니다');
 
 // ── 배경음악 ──

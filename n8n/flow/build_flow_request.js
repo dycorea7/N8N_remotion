@@ -7,6 +7,42 @@ const isKorean = t.Language.toLowerCase() === 'korean';
 // 요리 쇼츠: 시트 Type 칸이 cooking/요리이거나 주제가 요리 같으면 요리 규칙을 강하게 적용 (최종 판단은 Claude가 format으로)
 const COOK_RE = /레시피|요리|볶음|계란찜|달걀찜|조림|무침|라면|덮밥|볶음밥|김밥|계란|달걀|김치|찌개|반찬|디저트|베이킹|케이크|파스타|샐러드|에어프라이어|전자레인지|recipe|cooking|bake/i;
 const cookingHint = /cook|요리|recipe/i.test(String(t.Type || '')) || COOK_RE.test(t.Topic);
+// ── 드라마 쇼츠: 배우(Flow 클립)가 직접 대사를 말한다. 나레이션 없음, 자막은 대본 대사 ──
+const dramaMode = /drama|드라마/i.test(String(t.Type || '')) || /드라마/.test(t.Topic);
+if (dramaMode) {
+  const dprompt = `You are the writer and director of a one-episode AI drama Short for the YouTube channel NextYou Global.
+The producer films every scene by hand in Google Flow (Veo 3): one 8-second vertical 9:16 clip per scene, and Veo makes the actors SPEAK the dialogue with lip-sync and natural ambient sound. There is no narrator. Our system adds subtitles from your dialogue and joins the clips.
+
+Story idea: ${t.Topic}
+Language of the dialogue, title and description: ${t.Language}. Flow prompts are in English except the spoken lines, which stay in ${t.Language}.
+
+=== STORY (one complete episode, 7 or 8 scenes, about 60 seconds) ===
+- Scene 1 is a cold open at the most intense or surprising moment (a line that makes the viewer need to know why). Then rewind or continue, build the conflict, land ONE strong twist around 70 percent in, and end with a satisfying payoff (사이다, a warm reversal or a sting). The last line should make the viewer want to watch it again from the start.
+- Relatable everyday Korean drama: family, couples, in-laws, workplace, friends, neighbours, money, a kind act repaid. Adults only. No violence, weapons, crime how-tos, sexual content or real people.
+- 2 or 3 characters at most, each with a Korean name.
+- Every scene has 1 or 2 short spoken lines, at most 30 Korean characters in total per scene (it must fit 8 seconds with a pause), natural spoken 반말/존댓말 that fits the relationship. Mostly one speaker per scene.
+
+=== CHARACTERS (consistency is everything) ===
+For each character give: name, look (English: age range, hair, face shape, clothing, one distinctive detail; no celebrity likeness) and voice (English: e.g. a calm low female voice, early thirties, Seoul accent). Paste the exact look AND voice description into every prompt where that character appears.
+Give ONE "setting" per location (English, room, furniture, light, colour palette) and paste it exactly into every prompt in that location.
+
+=== FLOW PROMPTS (one per scene, English, 60 to 110 words) ===
+Order: shot type and camera movement; the character(s) with their exact look; the action and facial emotion during the 8 seconds; the setting; light and colour; then the dialogue written exactly like this: <character name> (<voice description>) says in ${t.Language}: “<the line>”. Then: "Audio: natural dialogue and room ambience only, no background music. Photorealistic, cinematic Korean drama look, shallow depth of field, vertical 9:16 composition. No subtitles, no on-screen text, no logos."
+Vary the shots (close-up on a face for the big line, over-the-shoulder, two-shot, a detail of hands or an object for the twist).
+
+=== ON-SCREEN TEXT ===
+hook_text: an optional short title card over scene 1, at most 12 Korean characters (e.g. 결혼식 사흘 전), or empty.
+
+=== SEO ===
+title: 20 to 45 characters, a curiosity hook about the twist without spoiling it, ending with " | AI 드라마" (or " | AI Drama" in English).
+description: two lines teasing the story, then ${isKorean ? '📌 Next You Global 채널은 성경 말씀, 동기부여, 부자 마인드셋, 자기계발 쇼츠를 업로드합니다. / 👉 구독 & 좋아요로 함께 성장해요!' : '📌 Next You Global posts motivation, wealth mindset and self-improvement shorts. / 👉 Subscribe and like to grow with us!'} each on its own line, then one line saying the video was made with AI.
+hashtags: 4 to 6, include #AI드라마 (or #AIdrama) and #NextYouGlobal last.
+mood: EXACTLY ONE of calm_reflective, hopeful_uplifting, tense_dramatic, dark_serious, warm_gentle.
+
+Respond ONLY with valid JSON, no markdown fences. Never use the straight double-quote character inside a value; use “ ” instead.
+{"format":"drama","title":"...","description":"...","hashtags":["#..."],"mood":"...","characters":[{"name":"...","look":"...","voice":"..."}],"setting":"... (all locations, one line each)","hook_text":"...","scenes":[{"dialogue":[{"speaker":"name","line":"..."}],"flow_prompt":"..."}]}`;
+  return [{ json: { body: { model: 'claude-sonnet-4-6', max_tokens: 8000, system: principles || undefined, messages: [{ role: 'user', content: dprompt }] } } }];
+}
 const lengthRule = isKorean
   ? 'The full narration (all scenes together) is 250 to 320 Korean characters including spaces (about 35 to 40 seconds).'
   : 'The full narration (all scenes together) is 100 to 135 English words (about 35 to 40 seconds).';

@@ -3,7 +3,8 @@ const GITHUB_REPO = 'dycorea7/N8N_remotion';
 const GITHUB_BRANCH = 'main';
 const MUSIC_VOLUME = 0.14;
 const p = $('Parse Script').first().json;
-const tts = $('ElevenLabs TTS').first().json;
+const drama = p.format === 'drama';
+const tts = drama ? null : $('ElevenLabs TTS').first().json;
 function stripTags(al) {
   const c = al.characters || [], st = al.character_start_times_seconds || [], en = al.character_end_times_seconds || [];
   const C = [], S = [], E = [];
@@ -18,7 +19,19 @@ function stripTags(al) {
   }
   return { characters: C, character_start_times_seconds: S, character_end_times_seconds: E };
 }
-const alignment = stripTags(tts.alignment);
+// 드라마: 나레이션이 없으니 장면마다 8초(클립 길이)에 대사 글자를 고르게 펴서 자막 타이밍을 만든다
+function dramaAlignment(scenes) {
+  const C = [], S = [], E = [];
+  scenes.forEach((sc, i) => {
+    const t0 = i * 8, chars = [...sc.narration];
+    const a = t0 + 0.4, b = t0 + 7.4, step = (b - a) / Math.max(1, chars.length);
+    chars.forEach((ch, k) => { C.push(ch); S.push(a + k * step); E.push(a + (k + 1) * step); });
+    if (i < scenes.length - 1) { C.push('\n'); S.push(t0 + 7.95); E.push(t0 + 8); }
+  });
+  if (E.length) E[E.length - 1] = scenes.length * 8 - 0.05;
+  return { characters: C, character_start_times_seconds: S, character_end_times_seconds: E };
+}
+const alignment = drama ? dramaAlignment(p.scenes) : stripTags(tts.alignment);
 // 클립: 이름의 첫 숫자 = 장면 번호. 숫자가 하나도 없으면 이름 순서대로
 const files = $('List Clips').all().map(i => i.json).filter(f => f && f.id && f.name && (/^video\//.test(f.mimeType || '') || /\.(mp4|mov|m4v|webm)$/i.test(f.name)));
 if (!files.length) throw new Error('폴더에 영상 클립이 없습니다. 01.mp4, 02.mp4 … 처럼 올린 뒤 이 실행을 다시 하거나, 시트 Status를 pending으로 돌려 새로 시작하세요.');
@@ -41,7 +54,7 @@ const missing = byScene.map((f, i) => f ? 0 : i + 1).filter(Boolean);
 const scenes = p.scenes.map((s, i) => {
   const f = byScene[i];
   const visual = f
-    ? Object.assign({ type: 'image', src: 'https://drive.google.com/thumbnail?id=' + f.id + '&sz=w1080', video: 'https://drive.google.com/uc?export=download&id=' + f.id, videoStart: 0, text: i === 0 ? p.hookText : '', highlight: [] }, s.overlay ? { overlay: s.overlay } : {})
+    ? Object.assign({ type: 'image', clipAudio: drama || undefined, src: 'https://drive.google.com/thumbnail?id=' + f.id + '&sz=w1080', video: 'https://drive.google.com/uc?export=download&id=' + f.id, videoStart: 0, text: i === 0 ? p.hookText : '', highlight: [] }, s.overlay ? { overlay: s.overlay } : {})
     : fallback(s, i);
   return { narration: s.narration, visual };
 });
@@ -52,9 +65,11 @@ try { mfiles = $('List Music Files').all().map(i => i.json).filter(f => f && f.i
 const MOODS = ['calm_reflective', 'hopeful_uplifting', 'tense_dramatic', 'dark_serious', 'warm_gentle'];
 let pool = mfiles.filter(f => f.name.toLowerCase().startsWith(p.mood));
 if (!pool.length) pool = mfiles.filter(f => MOODS.some(m => f.name.toLowerCase().startsWith(m)));
+if (drama) pool = []; // 드라마는 대사가 잘 들리게 배경음악 없이
 if (pool.length) { const pick = pool[Math.floor(Math.random() * pool.length)]; musicUrl = 'https://drive.google.com/uc?export=download&id=' + pick.id; musicName = pick.name; }
 const jobId = 'fs_' + $now.toFormat('yyyyMMdd_HHmmss') + '_' + Math.random().toString(36).slice(2, 7);
-const job = { job_id: jobId, lang: p.subtitleLang, category: p.category, title: p.title, scenes, alignment, audio_base64: tts.audio_base64, music_url: musicUrl, music_volume: MUSIC_VOLUME, style: 'classic' };
+const job = { job_id: jobId, lang: p.subtitleLang, category: p.category, title: p.title, scenes, alignment, music_url: musicUrl, music_volume: MUSIC_VOLUME, style: 'classic' };
+if (drama) job.no_voice = true; else job.audio_base64 = tts.audio_base64;
 const text = JSON.stringify(job);
 console.log('job ' + jobId + ' | 클립 ' + (N - missing.length) + '/' + N + (missing.length ? ' (빠진 장면 ' + missing.join(', ') + ')' : '') + ' | music: ' + musicName);
 return [{

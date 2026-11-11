@@ -96,6 +96,8 @@ export function sanitizeVisual(v, narration) {
     // 영상 위에 함께 나오는 모션 그래픽 (Flow 쇼츠)
     const ov = sanitizeOverlay(v.overlay);
     if (ov) out2.overlay = ov;
+    // 드라마 쇼츠: 클립 소리(배우 대사·효과음)를 그대로 쓴다
+    if (v.clipAudio) out2.clipAudio = true;
     // 실사 영상 (render-job이 받아 둔 경우만). 시작 지점은 0~20초 안으로
     if (/^(https?:\/\/|job\/)/.test(String(v.video || ''))) { out2.video = String(v.video); out2.videoStart = Math.max(0, Math.min(20, Number(v.videoStart) || 0)); }
     // 레시피: 슬라이더(밝기 조절) 연출 없이 사진·영상만
