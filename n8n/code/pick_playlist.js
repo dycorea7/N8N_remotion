@@ -13,7 +13,8 @@ const p = $('Parse Script JSON').first().json;
 // 시리즈 회차는 시리즈 재생목록으로 (회차 순서대로 쌓인다)
 let row = {};
 try { row = $('Pick Next Topic').first().json || {}; } catch (e) {}
-const SERIES_PLAYLISTS = { '뇌과학 도파민 디톡스': { title: '뇌과학 도파민 디톡스 10부작', description: '집중력·피로·습관을 뇌과학으로 풀어 보는 쇼츠 시리즈 (EP.1~10)' } };
+const SERIES_PLAYLISTS = { '뇌과학 도파민 디톡스': { title: '뇌과학 도파민 디톡스 10부작', description: '집중력·피로·습관을 뇌과학으로 풀어 보는 쇼츠 시리즈 (EP.1~10)' },
+  '잠 해킹': { title: '잠 해킹 10부작', description: '빨리 잠들고 덜 깨는 법을 수면 과학으로 풀어 보는 쇼츠 시리즈 (EP.1~10)' } };
 const target = (String(row.Source || '').trim() === 'series' && SERIES_PLAYLISTS[String(row.Series || '').trim()]) || PLAYLISTS[p.category] || PLAYLISTS.other;
 const res = $input.first().json || {};
 
