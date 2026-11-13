@@ -22,6 +22,7 @@ import { EditorialCaptions, EditorialChrome, EditorialSceneView } from './editor
 import { ED_THEME, FONT_LOADS as ED_FONTS } from './editorial/util';
 import { BankCaptions, BankChrome, BankSceneView } from './bank/scenes';
 import { BANK_THEME, FONT_LOADS as BANK_FONTS } from './bank/util';
+import { BoardReveal, SKIN_FONT_LOADS, SkinBackground, SkinWrap, isSkin, skinTheme } from './skins';
 
 loadFonts();
 
@@ -38,8 +39,9 @@ export const Short: React.FC<ShortProps> = (props) => {
   const pop = props.style === 'pop';
   const ed = props.style === 'editorial';
   const bank = props.style === 'bank';
-  const theme = bank ? BANK_THEME : ed ? ED_THEME : pop ? POP_THEME : hud ? HUD_THEME : glyph ? glyphThemeFor(props.category) : themeFor(props.category);
-  useState(() => { if (glyph) loadTextFonts(FONT_LOADS, allText(props)); if (hud) loadTextFonts(HUD_FONTS, allText(props)); if (pop) loadTextFonts(POP_FONTS, allText(props)); if (ed) loadTextFonts(ED_FONTS, allText(props)); if (bank) loadTextFonts(BANK_FONTS, allText(props)); return 0; });
+  const skin = isSkin(props.style) ? props.style : null;
+  const theme = skin ? skinTheme(skin, props.category) : bank ? BANK_THEME : ed ? ED_THEME : pop ? POP_THEME : hud ? HUD_THEME : glyph ? glyphThemeFor(props.category) : themeFor(props.category);
+  useState(() => { if (glyph) loadTextFonts(FONT_LOADS, allText(props)); if (hud) loadTextFonts(HUD_FONTS, allText(props)); if (pop) loadTextFonts(POP_FONTS, allText(props)); if (ed) loadTextFonts(ED_FONTS, allText(props)); if (bank) loadTextFonts(BANK_FONTS, allText(props)); if (skin === 'whiteboard') loadTextFonts(SKIN_FONT_LOADS, allText(props)); return 0; });
   const ticker = React.useMemo(() => hud ? props.scenes.map(s => { const v: any = s.visual; return String(v.text || v.title || v.label || '').trim(); }).filter(Boolean).map(x => x.slice(0, 24)) : [], [hud, props.scenes]);
   const floorWords = React.useMemo(() => glyph ? Array.from(new Set(props.scenes.flatMap(s => s.narration.split(/\s+/)).map(w => w.replace(/[^\p{L}\p{N}]/gu, '')).filter(w => w.length >= 2))).slice(0, 120) : [], [glyph, props.scenes]);
   const View = bank ? BankSceneView : ed ? EditorialSceneView : pop ? PopSceneView : hud ? HudSceneView : glyph ? GlyphSceneView : SceneView;
@@ -48,7 +50,8 @@ export const Short: React.FC<ShortProps> = (props) => {
   const musicVol = props.musicVolume ?? 0.16;
   return (
     <AbsoluteFill style={{ backgroundColor: theme.bg1 }}>
-      {ed || bank ? <AbsoluteFill style={{ background: theme.bg1 }} /> : hud ? <Backdrop /> : glyph ? <GlyphFloor theme={theme as any} words={floorWords} sceneIndex={sceneIndex} /> : <Background theme={theme} sceneIndex={sceneIndex} />}
+      {skin && skin !== 'ai' ? <SkinBackground skin={skin} sceneIndex={sceneIndex} /> : ed || bank ? <AbsoluteFill style={{ background: theme.bg1 }} /> : hud ? <Backdrop /> : glyph ? <GlyphFloor theme={theme as any} words={floorWords} sceneIndex={sceneIndex} /> : <Background theme={theme} sceneIndex={sceneIndex} />}
+      <SkinWrap skin={skin || 'ai'}>
       {props.scenes.map((s, i) => {
         const from = Math.round(s.start * fps);
         const dur = Math.max(1, Math.round(s.end * fps) - from);
@@ -56,10 +59,11 @@ export const Short: React.FC<ShortProps> = (props) => {
         const ov = i < props.scenes.length - 1 ? Math.min(OVERLAP, Math.floor(dur / 3)) : 0;
         return (
           <Sequence key={i} from={from} durationInFrames={dur + ov} name={`${i}:${s.visual.type}`}>
-            <View scene={s} theme={theme as any} index={i} durationInFrames={dur + ov} overlap={ov} lang={props.lang} category={props.category} />
+            <BoardReveal on={skin === 'whiteboard'}><View scene={s} theme={theme as any} index={i} durationInFrames={dur + ov} overlap={ov} lang={props.lang} category={props.category} /></BoardReveal>
           </Sequence>
         );
       })}
+      </SkinWrap>
       {glyph && <FilmFx />}
       {hud && <HudFilm dark={props.scenes[sceneIndex]?.visual.type === 'image'} />}
       {hud && <Chrome dark={props.scenes[sceneIndex]?.visual.type === 'image'} sceneIndex={sceneIndex} sceneCount={props.scenes.length} ticker={ticker} />}

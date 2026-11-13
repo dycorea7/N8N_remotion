@@ -2,6 +2,7 @@ import { continueRender, delayRender, staticFile } from 'remotion';
 import '@fontsource/noto-serif-kr/700.css';
 import '@fontsource/black-han-sans/400.css';
 import '@fontsource/nanum-pen-script/400.css';
+import '@fontsource/gaegu/700.css';
 import '@fontsource/nanum-gothic-coding/400.css';
 import '@fontsource/nanum-gothic-coding/700.css';
 
