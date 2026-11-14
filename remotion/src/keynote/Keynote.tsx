@@ -3,6 +3,7 @@
 //  - 커서가 모든 변화를 직접 누르고 끌고, 카메라가 그 순간을 스크린 스튜디오처럼 확대 (커서도 같이 커짐)
 //  - 처음: 워드마크가 마침표 속으로 접히고 점이 알약이 된다 / 끝: 알약 → 점 → 글자가 튀어나와 첫 프레임과 같아진다
 import React, { useLayoutEffect, useMemo, useState } from 'react';
+import { ChannelLogo, showLogo } from '../ChannelLogo';
 import '@fontsource-variable/archivo/wdth.css';
 import '@fontsource-variable/geist/index.css';
 import { AbsoluteFill, Audio, continueRender, delayRender, interpolate, OffthreadVideo, Sequence, useCurrentFrame, useVideoConfig } from 'remotion';
@@ -111,6 +112,7 @@ export const KeynoteShort: React.FC<ShortProps> = (props) => {
         {geos && lastPlan && frame >= durationInFrames - tail && <OutroTail u={(frame - (durationInFrames - tail)) / fps} origin={keys.length ? cursorAt(keys, durationInFrames - tail, fps, W, H) : { x: W / 2, y: H / 2 }} lang={props.lang} />}
         <Cursor x={cur.x} y={cur.y} pressed={cur.pressed} ring={cur.ring} scale={L.land ? 1 : 1.1} />
       </AbsoluteFill>
+      {showLogo(props.logo, W, H) && <ChannelLogo hideFrom={durationInFrames - tail} />}
       {ready && <KCaptions captions={props.captions} lang={props.lang} hideAfter={durationInFrames - tail + Math.round(0.3 * fps)} />}
       {/* 효과음: 클릭마다 딸깍, 덮기·밀기는 휙 */}
       {keys.filter(k => k.act === 'click' || k.act === 'down').map((k, i) => <Sfx key={'c' + i} name="tick" at={k.f} volume={0.32} />)}

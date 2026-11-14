@@ -32,7 +32,7 @@ export const FilmFx: React.FC<{ dark: boolean }> = ({ dark }) => {
 };
 
 /** 화면 테두리 HUD: 모서리 십자, 장면 번호, 남은 시간 플랩, 눈금자, 아래 티커, 타임코드 */
-export const Chrome: React.FC<{ dark: boolean; sceneIndex: number; sceneCount: number; ticker: string[]; brand?: string }> = ({ dark, sceneIndex, sceneCount, ticker, brand = 'NEXT YOU · GLOBAL' }) => {
+export const Chrome: React.FC<{ dark: boolean; sceneIndex: number; sceneCount: number; ticker: string[]; brand?: string; logo?: boolean }> = ({ dark, sceneIndex, sceneCount, ticker, brand = 'NEXT YOU · GLOBAL', logo }) => {
   const frame = useCurrentFrame();
   const { fps, width: W, height: Hh, durationInFrames } = useVideoConfig();
   const land = W > Hh;
@@ -45,10 +45,10 @@ export const Chrome: React.FC<{ dark: boolean; sceneIndex: number; sceneCount: n
   const tx = -((frame * 2.2) % (tickerText.length * 15));
   return (
     <AbsoluteFill style={{ pointerEvents: 'none', color: col }}>
-      <Cross x={m} y={top - 10} color={col} /><Cross x={W - m} y={top - 10} color={col} />
+      {!logo && <Cross x={m} y={top - 10} color={col} />}<Cross x={W - m} y={top - 10} color={col} />
       <Cross x={m} y={bottom - 40} color={col} /><Cross x={W - m} y={bottom - 40} color={col} />
       {/* 왼쪽 위: 장면 번호 */}
-      <div style={{ position: 'absolute', left: m + 24, top: top + 6 }}>
+      <div style={{ position: 'absolute', left: logo ? 232 : m + 24, top: top + 6 }}>
         <Mono size={land ? 20 : 26} color={col}>SCENE {pad2(sceneIndex + 1)} / {pad2(sceneCount)}</Mono>
       </div>
       {/* 오른쪽 위: 브랜드 + 남은 초 플랩 + 미니 파형 */}

@@ -537,7 +537,7 @@ export const EditorialSceneView: React.FC<P> = (p) => {
 };
 
 /** 테두리: 종이 결 + 잡지 머리글(쪽 번호) + 아래 자 모양 진행선 */
-export const EditorialChrome: React.FC<{ index: number; count: number }> = ({ index, count }) => {
+export const EditorialChrome: React.FC<{ index: number; count: number; logo?: boolean }> = ({ index, count, logo }) => {
   const frame = useCurrentFrame();
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const land = W > H;
@@ -546,7 +546,7 @@ export const EditorialChrome: React.FC<{ index: number; count: number }> = ({ in
   return (
     <AbsoluteFill style={{ pointerEvents: 'none' }}>
       <Grain />
-      <div style={{ position: 'absolute', left: m, right: m, top, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid rgba(28,26,23,0.45)`, paddingBottom: 10 }}>
+      <div style={{ position: 'absolute', left: logo ? 230 : m, right: m, top, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid rgba(28,26,23,0.45)`, paddingBottom: 10 }}>
         {mono('NEXT YOU · JOURNAL', land ? 18 : 22)}
         {mono(`NO. ${pad2(index + 1)} / ${pad2(count)}`, land ? 18 : 22)}
       </div>

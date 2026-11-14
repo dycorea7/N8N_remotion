@@ -22,6 +22,7 @@ import { EditorialCaptions, EditorialChrome, EditorialSceneView } from './editor
 import { ED_THEME, FONT_LOADS as ED_FONTS } from './editorial/util';
 import { BankCaptions, BankChrome, BankSceneView } from './bank/scenes';
 import { BANK_THEME, FONT_LOADS as BANK_FONTS } from './bank/util';
+import { ChannelLogo, LOGO_BOX, showLogo } from './ChannelLogo';
 import { BoardReveal, SKIN_FONT_LOADS, SkinBackground, SkinWrap, isSkin, skinTheme } from './skins';
 
 loadFonts();
@@ -48,6 +49,7 @@ export const Short: React.FC<ShortProps> = (props) => {
   const t = frame / fps;
   const sceneIndex = Math.max(0, props.scenes.findIndex(s => t >= s.start && t < s.end));
   const musicVol = props.musicVolume ?? 0.16;
+  const logo = showLogo(props.logo, width, height);
   return (
     <AbsoluteFill style={{ backgroundColor: theme.bg1 }}>
       {skin && skin !== 'ai' ? <SkinBackground skin={skin} sceneIndex={sceneIndex} /> : ed || bank ? <AbsoluteFill style={{ background: theme.bg1 }} /> : hud ? <Backdrop /> : glyph ? <GlyphFloor theme={theme as any} words={floorWords} sceneIndex={sceneIndex} /> : <Background theme={theme} sceneIndex={sceneIndex} />}
@@ -66,13 +68,14 @@ export const Short: React.FC<ShortProps> = (props) => {
       </SkinWrap>
       {glyph && <FilmFx />}
       {hud && <HudFilm dark={props.scenes[sceneIndex]?.visual.type === 'image'} />}
-      {hud && <Chrome dark={props.scenes[sceneIndex]?.visual.type === 'image'} sceneIndex={sceneIndex} sceneCount={props.scenes.length} ticker={ticker} />}
+      {hud && <Chrome dark={props.scenes[sceneIndex]?.visual.type === 'image'} sceneIndex={sceneIndex} sceneCount={props.scenes.length} ticker={ticker} logo={logo} />}
       {pop && <PopFilm />}
       {pop && props.scenes[sceneIndex] && <PopChrome type={props.scenes[sceneIndex].visual.type} index={sceneIndex} since={frame - Math.round(props.scenes[sceneIndex].start * fps)} light={isLight(blockOf(props.scenes[sceneIndex].visual.type, sceneIndex)[0])} />}
-      {ed && <EditorialChrome index={sceneIndex} count={props.scenes.length} />}
-      {bank && <BankChrome index={sceneIndex} count={props.scenes.length} />}
+      {ed && <EditorialChrome index={sceneIndex} count={props.scenes.length} logo={logo} />}
+      {bank && <BankChrome index={sceneIndex} count={props.scenes.length} logo={logo} />}
       {bank ? <BankCaptions captions={props.captions} lang={props.lang} /> : ed ? <EditorialCaptions captions={props.captions} lang={props.lang} /> : pop ? <PopCaptions captions={props.captions} lang={props.lang} /> : hud ? <HudCaptions captions={props.captions} lang={props.lang} /> : <Captions captions={props.captions} theme={theme} lang={props.lang} />}
-      {!hud && !pop && !ed && !bank && landscape && props.chapters && props.chapters.length > 1 && <ChapterLabel chapters={props.chapters} t={t} theme={theme} />}
+      {!hud && !pop && !ed && !bank && landscape && props.chapters && props.chapters.length > 1 && <ChapterLabel chapters={props.chapters} t={t} theme={theme} left={logo ? LOGO_BOX.x + LOGO_BOX.w + 22 : 56} />}
+      {logo && <ChannelLogo />}
       {/* 진행 바 */}
       {!pop && !ed && !bank && <div style={{ position: 'absolute', left: 0, top: 0, height: 10, width: `${(frame / durationInFrames) * 100}%`, background: theme.accent, opacity: 0.85 }} />}
       {props.audioSrc && <Audio src={resolveSrc(props.audioSrc)!} />}
@@ -84,13 +87,13 @@ export const Short: React.FC<ShortProps> = (props) => {
 };
 
 /** 롱폼: 왼쪽 위에 지금 챕터 (번호/전체 · 제목) */
-const ChapterLabel: React.FC<{ chapters: Chapter[]; t: number; theme: Theme }> = ({ chapters, t, theme }) => {
+const ChapterLabel: React.FC<{ chapters: Chapter[]; t: number; theme: Theme; left?: number }> = ({ chapters, t, theme, left = 56 }) => {
   let i = 0;
   for (let k = 0; k < chapters.length; k++) if (t >= chapters[k].start) i = k;
   const since = t - chapters[i].start;
   const op = Math.min(1, since / 0.6) * 0.92;
   return (
-    <div style={{ position: 'absolute', left: 56, top: 44, display: 'flex', alignItems: 'center', gap: 16, opacity: op, fontFamily: SANS_FONT }}>
+    <div style={{ position: 'absolute', left, top: 52, display: 'flex', alignItems: 'center', gap: 16, opacity: op, fontFamily: SANS_FONT }}>
       <div style={{ padding: '8px 18px', borderRadius: 999, background: theme.accent, color: theme.bg1, fontWeight: 900, fontSize: 26 }}>{i + 1} / {chapters.length}</div>
       <div style={{ fontWeight: 700, fontSize: 30, color: theme.fg, textShadow: '0 2px 12px rgba(0,0,0,0.6)', maxWidth: 1000, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{chapters[i].title}</div>
     </div>

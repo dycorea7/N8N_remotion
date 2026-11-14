@@ -21,6 +21,8 @@ export type ShortProps = {
   scenes: Scene[]; captions: Caption[];
   audioSrc?: string; musicSrc?: string; musicVolume?: number; title?: string;
   chapters?: Chapter[];
+  /** 채널 로고 (왼쪽 위). 기본: 가로 영상이면 표시, false면 끔 */
+  logo?: boolean;
   style?: 'classic' | 'glyph' | 'hud' | 'pop' | 'keynote' | 'editorial' | 'bank' | 'flat' | 'isometric' | 'whiteboard' | 'neon' | 'ai';
 };
 export type ThumbProps = { category: string; lang: 'ko' | 'en'; text: string; highlight?: string[]; src?: string; badge?: string };

@@ -606,7 +606,7 @@ export const BankSceneView: React.FC<P> = (p) => {
 };
 
 /** 테두리: 앱 상단 바 (뒤로 · NEXT YOU BANK · 알림) + 그 아래 진행선 */
-export const BankChrome: React.FC<{ index: number; count: number }> = () => {
+export const BankChrome: React.FC<{ index: number; count: number; logo?: boolean }> = ({ logo }) => {
   const frame = useCurrentFrame();
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const land = W > H;
@@ -615,11 +615,11 @@ export const BankChrome: React.FC<{ index: number; count: number }> = () => {
   return (
     <AbsoluteFill style={{ pointerEvents: 'none' }}>
       <div style={{ position: 'absolute', left: m, right: m, top, height: 70 * s, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Lucide.ChevronLeft size={46 * s} color={C.ink} strokeWidth={2.4} />
+        {logo ? <span style={{ width: 160 }} /> : <Lucide.ChevronLeft size={46 * s} color={C.ink} strokeWidth={2.4} />}
         <span style={{ fontFamily: F.sans, fontWeight: 800, fontSize: 32 * s, color: C.ink, letterSpacing: -0.5 }}>NEXT YOU BANK</span>
         <Lucide.Bell size={40 * s} color={C.ink} strokeWidth={2.2} />
       </div>
-      <div style={{ position: 'absolute', left: m, right: m, top: top + 82 * s, height: 6, borderRadius: 3, background: 'rgba(20,26,35,0.08)' }}>
+      <div style={{ position: 'absolute', left: m, right: m, top: logo ? top + 106 : top + 82 * s, height: 6, borderRadius: 3, background: 'rgba(20,26,35,0.08)' }}>
         <div style={{ width: `${(frame / durationInFrames) * 100}%`, height: '100%', borderRadius: 3, background: C.blue }} />
       </div>
     </AbsoluteFill>
