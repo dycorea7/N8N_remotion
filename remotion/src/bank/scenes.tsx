@@ -5,7 +5,7 @@ import { Media } from '../Media';
 import { resolveSrc } from '../assets';
 import { Caption } from '../types';
 import { Center, P, Sfx, TEMPLATES, counterProgress, counterTiming, fmt, iconFor, revealFrames, useLandscape } from '../scenes';
-import { C, F, SHADOW, back, barcode, clamp01, easeOut, pad2, zigzag } from './util';
+import { C, F, PHOTO_VARS, RAW, SHADOW, back, barcode, clamp01, easeOut, pad2, zigzag } from './util';
 
 // ── 공통 ──
 const isHl = (w: string, hl: string[]) => { const c = w.replace(/[^\p{L}\p{N}%]/gu, ''); return c.length > 0 && hl.some(h => { const x = h.replace(/[^\p{L}\p{N}%]/gu, ''); return x && (c.includes(x) || (x.includes(c) && c.length > 1)); }); };
@@ -15,20 +15,21 @@ const ko = (lang: string, k: string, e: string) => (lang === 'ko' ? k : e);
 /** 등장: at 프레임부터 len 프레임 동안 0→1 */
 const useIn = (at = 0, len = 10, curve: (x: number) => number = easeOut) => curve(clamp01((useCurrentFrame() - at) / len));
 
-/** 앱 바탕. 사진 배경(bgSrc)이 있으면 흐리게 깔고 밝은 회색으로 덮는다 (유리 같은 앱 화면) */
+/** 앱 바탕. 사진 배경(bgSrc)이 있으면 그림을 또렷하게 보여 주고, 카드·글자를 투명/흰 글자로 바꿔 그림을 가리지 않는다 */
 const BgCtx = React.createContext<{ src?: string; video?: string; videoStart?: number; dur: number; index: number }>({ dur: 150, index: 0 });
 const Bg: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const ctx = React.useContext(BgCtx);
   const f = useCurrentFrame();
-  const z = 1.12 + 0.05 * clamp01(f / Math.max(1, ctx.dur));
+  const z = 1.04 + 0.05 * clamp01(f / Math.max(1, ctx.dur));
+  const photo = !!ctx.src;
   return (
-    <AbsoluteFill style={{ background: C.bg }}>
-      {ctx.src && (
+    <AbsoluteFill style={photo ? { background: '#000' } : { background: C.bg }}>
+      {photo && (
         <AbsoluteFill style={{ overflow: 'hidden' }}>
-          <AbsoluteFill style={{ transform: `scale(${z})`, filter: 'blur(14px) saturate(1.1)' }}>{ctx.video
+          <AbsoluteFill style={{ transform: `scale(${z})` }}>{ctx.video
             ? <Media video={ctx.video} videoStart={ctx.videoStart} />
             : <Img src={resolveSrc(ctx.src)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}</AbsoluteFill>
-          <AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(241,243,246,0.80), rgba(241,243,246,0.90))' }} />
+          <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.10) 30%, rgba(0,0,0,0.38) 100%)' }} />
         </AbsoluteFill>
       )}
       {children}
@@ -598,7 +599,7 @@ export const BankSceneView: React.FC<P> = (p) => {
     : { transform: `translateY(${(1 - w) * 100}%)`, boxShadow: '0 -30px 60px rgba(20,26,35,0.18)', borderRadius: `${(1 - w) * 60}px ${(1 - w) * 60}px 0 0`, overflow: 'hidden' };
   const bg = v.bgSrc && type !== 'image' && type !== 'chapter';
   return (
-    <AbsoluteFill style={style}>
+    <AbsoluteFill style={bg ? { ...style, ...(PHOTO_VARS as any), textShadow: '0 2px 10px rgba(0,0,0,0.85), 0 0 3px rgba(0,0,0,0.9)' } : style}>
       <BgCtx.Provider value={{ src: bg ? v.bgSrc : undefined, video: bg ? v.bgVideo : undefined, videoStart: v.bgVideoStart, dur: p.durationInFrames, index: p.index }}><T {...p} /></BgCtx.Provider>
       {p.index > 0 && <Sfx name="whoosh" at={0} volume={0.1} />}
     </AbsoluteFill>
@@ -616,7 +617,7 @@ export const BankChrome: React.FC<{ index: number; count: number; logo?: boolean
     <AbsoluteFill style={{ pointerEvents: 'none' }}>
       <div style={{ position: 'absolute', left: m, right: m, top, height: 70 * s, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         {logo ? <span style={{ width: 160 }} /> : <Lucide.ChevronLeft size={46 * s} color={C.ink} strokeWidth={2.4} />}
-        <span style={{ fontFamily: F.sans, fontWeight: 800, fontSize: 32 * s, color: C.ink, letterSpacing: -0.5 }}>NEXT YOU BANK</span>
+        <span style={{ fontFamily: F.sans, fontWeight: 800, fontSize: 32 * s, color: RAW.ink, letterSpacing: -0.5, background: 'rgba(255,255,255,0.86)', padding: `${6 * s}px ${22 * s}px`, borderRadius: 999 }}>NEXT YOU BANK</span>
         <Lucide.Bell size={40 * s} color={C.ink} strokeWidth={2.2} />
       </div>
       <div style={{ position: 'absolute', left: m, right: m, top: logo ? top + 106 : top + 82 * s, height: 6, borderRadius: 3, background: 'rgba(20,26,35,0.08)' }}>
