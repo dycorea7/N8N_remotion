@@ -34,3 +34,28 @@ export const Thumb: React.FC<ThumbProps> = ({ category, lang, text, highlight = 
     </AbsoluteFill>
   );
 };
+
+// 쇼츠 썸네일 1080×1920: 사진을 화면 가득, 가운데 위쪽(검색·채널 화면에서 잘리지 않는 영역)에 큰 문구
+export const ShortThumbInner: React.FC<ThumbProps> = ({ category, lang, text, highlight = [], src, badge }) => {
+  const theme = themeFor(category);
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const hl = highlight.map(h => h.replace(/\s+/g, ''));
+  const len = String(text || '').replace(/\s/g, '').length;
+  const size = lang === 'ko' ? (len > 14 ? 128 : len > 9 ? 150 : 176) : (len > 24 ? 104 : 128);
+  return (
+    <AbsoluteFill style={{ background: `linear-gradient(160deg, ${theme.bg1}, ${theme.bg2})` }}>
+      {src && <Img src={resolveSrc(src)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+      <AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 28%, rgba(0,0,0,0.6) 52%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0) 100%)' }} />
+      <AbsoluteFill style={{ top: 420, height: 720, padding: '0 70px', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+        {badge && <div style={{ padding: '14px 34px', borderRadius: 18, background: theme.accent, color: theme.bg1, fontFamily: SANS_FONT, fontWeight: 900, fontSize: 52, marginBottom: 34 }}>{badge}</div>}
+        <div style={{ fontFamily: SANS_FONT, fontWeight: 900, fontSize: size, lineHeight: 1.1, letterSpacing: lang === 'ko' ? -4 : -1, color: '#fff', wordBreak: 'keep-all' }}>
+          {words.map((w, i) => {
+            const isHl = hl.some(h => h && (w.includes(h) || (h.includes(w.replace(/[^\p{L}\p{N}]/gu, '')) && w.length > 1)));
+            return <span key={i} style={{ color: isHl ? theme.accent : '#fff', WebkitTextStroke: '8px rgba(0,0,0,0.92)', paintOrder: 'stroke fill', textShadow: '0 10px 36px rgba(0,0,0,0.7)', marginRight: size * 0.2, display: 'inline-block' }}>{w}</span>;
+          })}
+        </div>
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
+export const ThumbShort = ShortThumbInner;

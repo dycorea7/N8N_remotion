@@ -1,7 +1,7 @@
 import React from 'react';
 import { Composition, Still } from 'remotion';
 import { Short } from './Short';
-import { Thumb } from './Thumb';
+import { Thumb, ThumbShort } from './Thumb';
 import { ShortProps, ThumbProps } from './types';
 
 const defaults: ShortProps = {
@@ -20,5 +20,7 @@ export const Root: React.FC = () => (
     <Composition id="Long" component={Short as any} width={1920} height={1080} fps={24} durationInFrames={150} defaultProps={{ ...defaults, fps: 24 } as any} calculateMetadata={meta} />
     {/* 롱폼 썸네일 */}
     <Still id="Thumb" component={Thumb as any} width={1280} height={720} defaultProps={thumbDefaults as any} />
+    {/* 쇼츠 썸네일 9:16 */}
+    <Still id="ThumbShort" component={ThumbShort as any} width={1080} height={1920} defaultProps={{ ...thumbDefaults, badge: '30초 정리' } as any} />
   </>
 );

@@ -2,6 +2,7 @@
 //   node render-job.mjs <job.json 경로 또는 URL> <출력 mp4 경로>
 // job.json = n8n이 만든 { job_id, lang, category, title, scenes, alignment, audio_base64 | audio_url, music_url, music_volume }
 //   롱폼은 추가로 { format: 'long', fps: 24, chapters: [{title}], thumbnail: {text, highlight, src, badge} } (장면마다 chapter 번호)
+//   쇼츠도 thumbnail: {text, highlight, badge, scene?, src?} 를 주면 9:16 썸네일을 만든다.
 //   썸네일이 있으면 <출력>.jpg 도 만든다.
 // 결과 요약은 <출력>.result.json 으로 남긴다.
 import fs from 'node:fs';
@@ -94,15 +95,15 @@ await Promise.all((job.scenes || []).map(async (s, i) => {
   }
 }));
 
-// ── 롱폼 썸네일 이미지 ──
+// ── 썸네일 배경 이미지 (롱폼·쇼츠 공통: job.thumbnail.src가 URL이면 받아 둔다) ──
 const isLong = job.format === 'long';
 let thumbSrc = '';
-if (isLong && job.thumbnail && /^https?:\/\//.test(String(job.thumbnail.src || ''))) {
+if (job.thumbnail && /^https?:\/\//.test(String(job.thumbnail.src || ''))) {
   try {
     const name = `thumb${extOf(job.thumbnail.src, '.jpg')}`;
     fs.writeFileSync(path.join(dir, name), await fetchBuf(job.thumbnail.src, 20e6));
     thumbSrc = `${rel}/${name}`;
-  } catch (e) { warnings.push('썸네일 이미지 실패 → 첫 이미지 장면 사용: ' + e.message); }
+  } catch (e) { warnings.push('썸네일 이미지 실패 → 장면 이미지 사용: ' + e.message); }
 }
 
 const props = prepare(job);
@@ -124,14 +125,37 @@ const serveUrl = await bundle({ entryPoint: path.join(__dirname, 'src/index.ts')
 const composition = await selectComposition({ serveUrl, id: isLong ? 'Long' : 'Short', inputProps: props, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
 
 // 썸네일은 영상보다 먼저 만든다 (렌더가 길어서 실패하면 원인 파악이 늦어지지 않게)
-let thumbPath = null;
-if (isLong && job.thumbnail && job.thumbnail.text) {
+// 롱폼: 1280×720 'Thumb' / 쇼츠: 1080×1920 'ThumbShort' (job.thumbnail.text가 있을 때만)
+// 쇼츠 배경: thumbnail.src → thumbnail.scene 장면의 실사 클립 한 프레임 → 그 장면 이미지 → 첫 이미지 장면 → 사진 배경
+function frameFromClip(clipRel, sec) {
   try {
-    const firstImg = props.scenes.find(s => s.visual.type === 'image');
-    const tp = { category: props.category, lang: props.lang, text: String(job.thumbnail.text).slice(0, 40), highlight: job.thumbnail.highlight || [], badge: String(job.thumbnail.badge || '').slice(0, 14), src: thumbSrc || (firstImg && firstImg.visual.src) || undefined };
-    const still = await selectComposition({ serveUrl, id: 'Thumb', inputProps: tp, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
+    const out = path.join(dir, 'thumb_frame.jpg');
+    const r = spawnSync('ffmpeg', ['-hide_banner', '-nostdin', '-y', '-ss', String(sec), '-i', path.join(__dirname, 'public', clipRel), '-frames:v', '1', '-q:v', '2', out], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+    return r.status === 0 && fs.existsSync(out) ? `${rel}/thumb_frame.jpg` : '';
+  } catch (e) { return ''; }
+}
+function pickThumbBg() {
+  if (thumbSrc) return thumbSrc;
+  const sc = props.scenes;
+  const want = Number.isInteger(Number(job.thumbnail.scene)) ? Number(job.thumbnail.scene) : -1;
+  const order = [...(sc[want] ? [sc[want]] : []), ...sc.filter(s => s.visual.type === 'image'), ...sc];
+  for (const s of order) {
+    const v = s.visual || {};
+    if (v.type === 'image' && v.video && !/^https?:/.test(v.video)) { const f = frameFromClip(v.video, Math.min(2, Math.max(0.5, (s.end - s.start) / 3))); if (f) return f; }
+    if (v.type === 'image' && v.src) return v.src;
+    if (!isLong && v.bgSrc) return v.bgSrc;
+  }
+  return undefined;
+}
+let thumbPath = null;
+if (job.thumbnail && job.thumbnail.text) {
+  try {
+    const tp = { category: props.category, lang: props.lang, text: String(job.thumbnail.text).slice(0, 40), highlight: job.thumbnail.highlight || [], badge: String(job.thumbnail.badge || '').slice(0, 14), src: pickThumbBg() };
+    const still = await selectComposition({ serveUrl, id: isLong ? 'Thumb' : 'ThumbShort', inputProps: tp, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
     thumbPath = outArg.replace(/\.mp4$/, '') + '.jpg';
-    await renderStill({ serveUrl, composition: still, inputProps: tp, output: thumbPath, imageFormat: 'jpeg', jpegQuality: 90, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
+    await renderStill({ serveUrl, composition: still, inputProps: tp, output: thumbPath, imageFormat: 'jpeg', jpegQuality: isLong ? 90 : 85, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
+    // 유튜브 썸네일은 2MB 이하
+    if (fs.statSync(thumbPath).size > 1.9e6) await renderStill({ serveUrl, composition: still, inputProps: tp, output: thumbPath, imageFormat: 'jpeg', jpegQuality: 70, browserExecutable: BROWSER, timeoutInMilliseconds: 120000 });
   } catch (e) { warnings.push('썸네일 생성 실패: ' + e.message); thumbPath = null; }
 }
 
