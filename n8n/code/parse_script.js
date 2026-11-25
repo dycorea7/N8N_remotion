@@ -53,9 +53,16 @@ function koSpeech(text) {
   // 숫자 (범위·소수·쉼표) + 띄어쓰기 1칸까지 + 단위/한글 낱말
   const unitAlt = UNITS.map(function (u) { return u[0].replace(/[°%]/g, '\\$&'); }).join('|');
   const re = new RegExp('(\\d[\\d,]*(?:\\.\\d+)?)(?:([~\\-–])(\\d[\\d,]*(?:\\.\\d+)?))?(\\s?)(' + unitAlt + '|[가-힣]+)?', 'g');
-  s = s.replace(re, function (m, a, dash, b, sp, word) {
+  s = s.replace(re, function (m, a, dash, b, sp, word, offset, str) {
     word = word || '';
     const A = a.split(',').join(''), B = b ? b.split(',').join('') : '';
+    // 번호 매기기: 1번 자세 / 2번은 / 3번이 → 첫 번째 자세 · 두 번째는 · 세 번째가 (횟수 '3번 반복'은 그대로 세 번)
+    if (!B && /^\d+$/.test(A) && /^번(은|는|이|가)?$/.test(word)) {
+      const after = String(str || '').slice((offset || 0) + m.length);
+      const listy = word.length > 1 ? /^(\s|[,.!?…]|$)/.test(after) : /^\s(자세|방법|습관|이유|실수|신호|원칙|단계|규칙|질문|문제|항목|팁|비법|순서|조건|후보|유형|타입|루틴)/.test(after);
+      const n = Number(A);
+      if (listy && n >= 1 && n <= 99) return (n === 1 ? '첫' : native(n)) + ' 번째' + ({ '은': '는', '는': '는', '이': '가', '가': '가' }[word.slice(1)] || '');
+    }
     const unit = UNITS.find(function (u) { return u[0] === word; });
     const nc = unit ? '' : nativeCounterOf(word);
     const isInt = function (x) { return /^\d+$/.test(x); };
